@@ -323,9 +323,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Sidebar toggle for mobile
-  btnToggleSidebar.addEventListener('click', () => {
+  // Sidebar toggle & mobile outside click dismissal
+  btnToggleSidebar.addEventListener('click', (e) => {
+    e.stopPropagation();
     sidebar.classList.toggle('open');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+      if (!sidebar.contains(e.target) && !btnToggleSidebar.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+    }
   });
 
   // Suggestion Cards Trigger

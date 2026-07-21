@@ -871,17 +871,135 @@ textarea, input, select {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Media Queries */
+/* Media Queries & Mobile Responsiveness */
 @media (max-width: 768px) {
   .sidebar {
-    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 900;
+    width: 280px;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
     transform: translateX(-100%);
+    transition: transform 0.25s ease-in-out;
   }
+
   .sidebar.open {
     transform: translateX(0);
   }
+
   .toggle-sidebar-btn {
-    display: block;
+    display: flex;
+  }
+
+  .main-header {
+    padding: 10px 12px;
+  }
+
+  .header-left {
+    gap: 8px;
+  }
+
+  .model-selector-wrapper {
+    max-width: 180px;
+  }
+
+  .model-selector-wrapper select {
+    font-size: 0.75rem;
+  }
+
+  .messages-container {
+    padding: 12px 10px;
+  }
+
+  .message-content-wrapper {
+    max-width: 92%;
+  }
+
+  .message-bubble {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  .input-area-wrapper {
+    padding: 0 10px 12px 10px;
+  }
+
+  .input-box-container {
+    padding: 8px 10px;
+    border-radius: 14px;
+  }
+
+  .chat-textarea {
+    font-size: 0.9rem;
+    min-height: 42px;
+  }
+
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .modal-card-large {
+    width: 96%;
+    max-height: 92vh;
+    padding: 14px;
+    margin: 10px auto;
+  }
+
+  .rule-form-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .audit-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .audit-table th, .audit-table td {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .prompt-cell {
+    max-width: 180px;
+    min-width: 130px;
+    font-size: 0.75rem;
+  }
+
+  .modal-tabs-header {
+    gap: 8px;
+  }
+
+  .modal-tab-btn {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-title {
+    font-size: 1.4rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .modal-header-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .stat-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  .btn-sidebar-option span {
+    font-size: 0.8rem;
   }
 }
 
