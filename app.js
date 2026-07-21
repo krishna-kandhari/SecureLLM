@@ -838,17 +838,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const newCategory = e.target.value;
           item.category = newCategory;
 
-          if (newCategory === "Whitelisted Exemption") {
+          if (newCategory === "Whitelisted Exemption" || newCategory === "Safe Query") {
             item.isSafe = true;
-            item.risk = "WHITELISTED";
+            item.risk = newCategory === "Whitelisted Exemption" ? "WHITELISTED" : "SAFE";
             if (window.AdaptiveEngine) {
               window.AdaptiveEngine.whitelistPrompt(item.prompt);
-            }
-          } else if (newCategory === "Safe Query") {
-            item.isSafe = true;
-            item.risk = "SAFE";
-            if (window.AdaptiveEngine) {
-              window.AdaptiveEngine.removeWhitelist(item.prompt);
             }
           } else {
             item.isSafe = false;

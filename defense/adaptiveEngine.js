@@ -84,32 +84,16 @@ window.AdaptiveEngine = {
         remoteWl = Array.isArray(data.whitelist) ? data.whitelist : [];
       }
 
-      let changed = false;
+      // Adopt remote rules & whitelist state (handles additions AND unblocks/deletions)
+      const rulesChanged = JSON.stringify(this.rules) !== JSON.stringify(remoteRules);
+      const wlChanged = JSON.stringify(this.whitelistedPrompts) !== JSON.stringify(remoteWl);
 
-      // Sync remote rules
-      if (remoteRules.length > 0) {
-        const currentIds = new Set(this.rules.map(r => r.id));
-        for (const rule of remoteRules) {
-          if (rule && rule.id && !currentIds.has(rule.id)) {
-            this.rules.unshift(rule);
-            currentIds.add(rule.id);
-            changed = true;
-          }
-        }
-      }
-
-      // Sync remote whitelist
-      if (remoteWl.length > 0) {
-        for (const item of remoteWl) {
-          if (item && !this.whitelistedPrompts.includes(item)) {
-            this.whitelistedPrompts.unshift(item);
-            changed = true;
-          }
-        }
-      }
-
-      if (changed) {
+      if (rulesChanged && (remoteRules.length > 0 || this.rules.length > 0)) {
+        this.rules = remoteRules;
         this.saveRules();
+      }
+      if (wlChanged && (remoteWl.length > 0 || this.whitelistedPrompts.length > 0)) {
+        this.whitelistedPrompts = remoteWl;
         this.saveWhitelist();
       }
     } catch (e) {}
