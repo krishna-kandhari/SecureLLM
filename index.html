@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Secure LLM - High-speed minimalist AI assistant powered by Groq LLaMA-3 & Mixtral models.">
+  <title>Secure LLM | AI Studio</title>
+  
+  <!-- Styling -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Highlight.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Marked.js for Markdown Parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div id="app-container">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">🛡️</div>
+          <span>Secure LLM</span>
+        </div>
+      </div>
+
+      <button class="btn-new-chat" id="btn-new-chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        <span>New Chat</span>
+      </button>
+
+      <div class="chat-history-container" id="chat-history-list">
+        <!-- Dynamically populated past chats -->
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-sidebar-option" id="btn-open-audit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Security Audit Logs</span>
+        </button>
+        <button class="btn-sidebar-option" id="btn-open-settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span>Settings</span>
+        </button>
+        <button class="btn-sidebar-option" id="btn-clear-history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <span>Clear History</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Chat Content -->
+    <main class="main-content">
+      
+      <!-- Top Header Bar -->
+      <header class="main-header">
+        <div class="header-left">
+          <button class="toggle-sidebar-btn" id="btn-toggle-sidebar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          </button>
+          
+          <div class="model-selector-wrapper">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-secondary);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <select id="model-select" aria-label="Select Model">
+              <option value="llama-3.3-70b-versatile">Secure LLM (LLaMA 3.3 70B)</option>
+              <option value="llama-3.1-8b-instant">Secure LLM Flash (8B Instant)</option>
+              <option value="mixtral-8x7b-32768">Secure LLM MoE (32k Context)</option>
+              <option value="gemma2-9b-it">Secure LLM Gemma 2</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="api-status-badge" id="api-status-badge">
+            <span class="status-dot"></span>
+            <span id="api-status-text">Set API Key</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Message History Display -->
+      <div class="messages-container" id="messages-container">
+        <div class="messages-inner" id="messages-inner">
+          
+          <!-- Welcome Screen (Visible on empty chat) -->
+          <div class="welcome-container" id="welcome-container">
+            <div class="welcome-logo">🛡️</div>
+            <h1 class="welcome-title">Welcome to Secure LLM</h1>
+            <p class="welcome-subtitle">Ultra-fast AI engine with password-protected API credentials.</p>
+            
+            <div class="suggestion-grid">
+              <div class="suggestion-card" data-prompt="Write a clean Python script for downloading images concurrently using asyncio and aiohttp.">
+                <div class="suggestion-title">💻 Python Concurrent Code</div>
+                <div class="suggestion-desc">Build an async scraper script</div>
+              </div>
+              <div class="suggestion-card" data-prompt="Explain the difference between SQL and NoSQL databases in simple terms with pros and cons.">
+                <div class="suggestion-title">💡 System Architecture</div>
+                <div class="suggestion-desc">SQL vs NoSQL breakdown</div>
+              </div>
+              <div class="suggestion-card" data-prompt="Draft a polite email to a client explaining a minor delay in project delivery and proposing a new timeline.">
+                <div class="suggestion-title">✉️ Business Email Draft</div>
+                <div class="suggestion-desc">Polite timeline update email</div>
+              </div>
+              <div class="suggestion-card" data-prompt="Explain quantum entanglement like I am 12 years old with fun analogies.">
+                <div class="suggestion-title">⚛️ Simple Physics Explainer</div>
+                <div class="suggestion-desc">Quantum physics for beginners</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="input-area-wrapper">
+        <div class="input-box-container">
+          <textarea class="chat-textarea" id="chat-textarea" placeholder="Send a message to Secure LLM..." rows="1"></textarea>
+          
+          <div class="input-controls">
+            <span class="input-info">Press Shift+Enter for new line</span>
+            
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="btn-stop" id="btn-stop" style="display: none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                <span>Stop</span>
+              </button>
+              
+              <button class="btn-send" id="btn-send" aria-label="Send message" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 class="modal-title">Groq API Settings</h2>
+          <button class="btn-close-modal" id="btn-close-modal">&times;</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="api-key-input">Groq API Key</label>
+          <div class="input-field-wrapper">
+            <input type="password" id="api-key-input" class="input-field" placeholder="gsk_..." autocomplete="off">
+            <button type="button" class="btn-toggle-key" id="btn-toggle-key">Show</button>
+          </div>
+          <small style="display: block; color: var(--text-dim); margin-top: 6px; font-size: 0.75rem;">Get a free API key at <a href="https://console.groq.com/keys" target="_blank" style="color: var(--accent-primary);">console.groq.com</a></small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="system-prompt-input">System Prompt</label>
+          <textarea id="system-prompt-input" class="input-field" rows="3" placeholder="You are a helpful, smart, and ultra-fast AI assistant."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="temperature-input">Temperature (<span id="temp-val-display">0.7</span>)</label>
+          <input type="range" id="temperature-input" min="0" max="1" step="0.05" value="0.7" style="width: 100%; accent-color: var(--accent-primary);">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="remote-log-url-input">Central Audit Webhook / Database URL (Optional)</label>
+          <input type="text" id="remote-log-url-input" class="input-field" placeholder="https://your-supabase.co/rest/v1/security_logs or Webhook URL" autocomplete="off">
+          <small style="display: block; color: var(--text-dim); margin-top: 4px; font-size: 0.725rem;">Syncs all user prompts globally to your Cloud DB (Supabase / Firebase / Webhook).</small>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btn-cancel-settings">Cancel</button>
+          <button class="btn-primary" id="btn-save-settings">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+  <!-- Security Audit & Adaptive Rule Dashboard Modal -->
+    <div class="modal-overlay" id="audit-modal">
+      <div class="modal-card wide-modal">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; background: rgba(99, 102, 241, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--accent-primary);">🛡️</div>
+            <h2 class="modal-title">Security Dashboard & Adaptive Engine</h2>
+          </div>
+          <button class="btn-close-modal" id="btn-close-audit">&times;</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="modal-tabs-header">
+          <div class="modal-tab-btn active" id="tab-btn-logs">Security Audit Logs</div>
+          <div class="modal-tab-btn" id="tab-btn-rules">Adaptive Rule Manager</div>
+        </div>
+
+        <!-- Tab 1: Audit Logs View -->
+        <div id="tab-view-logs">
+          <div class="audit-controls-bar">
+            <div class="audit-stats">
+              <span class="stat-pill" id="stat-total-logs">Total: 0</span>
+              <span class="stat-pill" style="color: #f87171;" id="stat-attacks-blocked">Attacks Blocked: 0</span>
+              <span class="stat-pill" style="color: #34d399;" id="stat-safe-passed">Safe Queries: 0</span>
+              <span class="stat-pill" id="stat-live-monitor" style="color: #38bdf8; border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.1); display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: #38bdf8; display: inline-block; box-shadow: 0 0 8px #38bdf8;" class="live-pulse-dot"></span>
+                <span>LIVE FEED</span>
+              </span>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-secondary" id="btn-clear-audit-logs" style="padding: 6px 12px; font-size: 0.8rem;">Clear Logs</button>
+              <button class="btn-primary" id="btn-export-audit-json" style="padding: 6px 14px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                <span>Export JSON</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="audit-table-wrapper">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th style="width: 130px;">Timestamp</th>
+                  <th style="width: 90px;">Risk</th>
+                  <th style="width: 160px;">Attack Category</th>
+                  <th style="width: 140px;">Reclassify Tag</th>
+                  <th>Evaluated Prompt</th>
+                  <th style="width: 110px;">Admin Decision</th>
+                </tr>
+              </thead>
+              <tbody id="audit-table-body">
+                <!-- Dynamically populated log entries -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 2: Adaptive Rule Manager View -->
+        <div id="tab-view-rules" style="display: none;">
+          <div class="rule-editor-card">
+            <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">Add Custom Adaptive Defense Rule</h4>
+            
+            <div class="rule-form-grid">
+              <div>
+                <label class="form-label" style="font-size: 0.75rem;">Category Name</label>
+                <input type="text" id="new-rule-category" class="input-field" placeholder="e.g. Financial Fraud Attack" style="padding: 6px 10px; font-size: 0.8rem;">
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.75rem;">Rule Name</label>
+                <input type="text" id="new-rule-name" class="input-field" placeholder="e.g. Bank Transfer Keyword" style="padding: 6px 10px; font-size: 0.8rem;">
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.75rem;">Risk Level</label>
+                <select id="new-rule-risk" class="input-field" style="padding: 6px 10px; font-size: 0.8rem;">
+                  <option value="HIGH">HIGH</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label class="form-label" style="font-size: 0.75rem;">Keyword or Regex Pattern</label>
+              <input type="text" id="new-rule-pattern" class="input-field" placeholder="e.g. transfer funds to bank|wire money" style="padding: 6px 10px; font-size: 0.8rem;">
+            </div>
+
+            <div style="text-align: right;">
+              <button class="btn-primary" id="btn-add-adaptive-rule" style="padding: 6px 16px; font-size: 0.8rem;">Save & Activate Rule</button>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h4 style="font-size: 0.9rem; font-weight: 600;">Active Custom Rules</h4>
+            <div>
+              <input type="file" id="input-import-dataset-json" accept=".json" style="display: none;">
+              <button class="btn-secondary" id="btn-import-dataset-json" style="padding: 4px 12px; font-size: 0.775rem; display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <span>Import JSON Dataset</span>
+              </button>
+            </div>
+          </div>
+          <div class="audit-table-wrapper" style="max-height: 240px;">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Category</th>
+                  <th style="width: 140px;">Rule Name</th>
+                  <th>Pattern / Keyword</th>
+                  <th style="width: 80px;">Risk</th>
+                  <th style="width: 70px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="adaptive-rules-table-body">
+                <!-- Dynamically populated dynamic rules -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="margin-top: 16px;">
+          <button class="btn-secondary" id="btn-close-audit-footer">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full Prompt View Modal -->
+    <div class="modal-overlay" id="prompt-view-modal" style="z-index: 150;">
+      <div class="modal-card wide-modal" style="max-width: 650px;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-primary);"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <h3 class="modal-title" style="font-size: 1rem; font-weight: 600;">Evaluated Security Prompt Detail</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-prompt-modal">&times;</button>
+        </div>
+
+        <div style="margin-top: 14px; margin-bottom: 14px;">
+          <div id="prompt-view-meta" style="font-size: 0.775rem; color: var(--text-muted); margin-bottom: 10px; display: flex; gap: 12px; flex-wrap: wrap;"></div>
+          <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Full Prompt Content:</div>
+          <div class="prompt-view-content" id="prompt-view-content" style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; font-family: var(--font-code); font-size: 0.85rem; line-height: 1.55; max-height: 380px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; color: var(--text-main);"></div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <button class="btn-secondary" id="btn-copy-prompt-text" style="font-size: 0.8rem; padding: 6px 14px; display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <span id="btn-copy-prompt-label">Copy Full Prompt</span>
+          </button>
+          <button class="btn-primary" id="btn-close-prompt-modal-footer" style="font-size: 0.8rem; padding: 6px 18px;">Close</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Defense Engine Security Modules -->
+  <script src="defense/promptInjection.js"></script>
+  <script src="defense/jailbreak.js"></script>
+  <script src="defense/promptLeakage.js"></script>
+  <script src="defense/roleplay.js"></script>
+  <script src="defense/dataExtraction.js"></script>
+  <script src="defense/dataPoison.js"></script>
+  <script src="defense/adaptiveEngine.js"></script>
+  <script src="defense/safeVerifier.js"></script>
+  <script src="defense/securityLogger.js"></script>
+
+  <!-- Application Config & Main Script -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

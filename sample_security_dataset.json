@@ -1,0 +1,30 @@
+[
+  {
+    "category": "Data Extraction Attack",
+    "ruleName": "Social Security & Tax ID Exfiltration",
+    "pattern": "(ssn|social security number|taxpayer id|national id number)",
+    "risk": "HIGH",
+    "description": "Detects attempts to harvest personal identification numbers."
+  },
+  {
+    "category": "Prompt Injection Attack",
+    "ruleName": "System Override Bypass",
+    "pattern": "(override system prompt|forget developer rules|bypass safety protocol)",
+    "risk": "HIGH",
+    "description": "Detects instruction overrides attempting to compromise model boundary constraints."
+  },
+  {
+    "category": "Prompt Leakage Attack",
+    "ruleName": "System Instructions Harvester",
+    "pattern": "(repeat above instructions|output hidden system prompt|reveal internal instructions)",
+    "risk": "HIGH",
+    "description": "Detects prompt extraction attempts."
+  },
+  {
+    "category": "Data Poisoning Attack",
+    "ruleName": "Malicious Training Injection",
+    "pattern": "(inject toxic training data|override model weights|poison dataset)",
+    "risk": "HIGH",
+    "description": "Detects attempts to corrupt training datasets."
+  }
+]
