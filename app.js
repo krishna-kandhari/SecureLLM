@@ -671,21 +671,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const adaptiveRulesTableBody = document.getElementById('adaptive-rules-table-body');
 
   let liveAuditTimer = null;
+  let lastKnownLogCount = 0;
 
   async function openAuditModal() {
     const isAuth = await verifyAdminAuth(true);
     if (!isAuth) return;
+    lastKnownLogCount = 0; // Force full render on open
     renderAuditTable();
     renderAdaptiveRulesTable();
     if (auditModal) auditModal.classList.add('open');
 
-    // Start Live Feed Auto-Refresh (updates every 2s in real-time)
+    // Start Live Feed Auto-Refresh — only adds NEW entries, never rebuilds existing rows
     if (!liveAuditTimer) {
-      liveAuditTimer = setInterval(() => {
+      liveAuditTimer = setInterval(async () => {
         if (auditModal && auditModal.classList.contains('open') && tabViewLogs.style.display !== 'none') {
-          renderAuditTable();
+          // Fetch latest logs silently
+          if (typeof window.SecurityLogger.fetchRemoteLogs === 'function') {
+            await window.SecurityLogger.fetchRemoteLogs();
+          }
+          const logs = window.SecurityLogger.getLogs();
+          // Only re-render if new logs arrived
+          if (logs.length !== lastKnownLogCount) {
+            renderAuditTable();
+          }
         }
-      }, 2000);
+      }, 3000);
     }
   }
 
@@ -870,6 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (statTotalLogs) statTotalLogs.textContent = `Total: ${logs.length}`;
     if (statAttacksBlocked) statAttacksBlocked.textContent = `Attacks Blocked: ${blockedCount}`;
     if (statSafePassed) statSafePassed.textContent = `Safe Queries: ${safeCount}`;
+    lastKnownLogCount = logs.length;
   }
 
   function renderAdaptiveRulesTable() {
