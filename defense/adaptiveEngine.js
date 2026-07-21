@@ -43,6 +43,26 @@ window.AdaptiveEngine = {
 
   // Pull all rules from the server and merge into local rules (called on interval)
   async syncFromServer() {
+    // STEP 1: Always re-read localStorage (catches cross-tab updates from admin)
+    try {
+      const stored = localStorage.getItem('secure_llm_adaptive_rules');
+      if (stored) {
+        const localStored = JSON.parse(stored);
+        if (Array.isArray(localStored)) {
+          const currentIds = new Set(this.rules.map(r => r.id));
+          for (const rule of localStored) {
+            if (rule && rule.id && !currentIds.has(rule.id)) {
+              this.rules.unshift(rule);
+              currentIds.add(rule.id);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore localStorage parse errors
+    }
+
+    // STEP 2: Fetch from server API (catches cross-device/cross-browser updates)
     try {
       const res = await fetch('/api/rules', { method: 'GET' });
       if (!res.ok) return;
@@ -70,6 +90,22 @@ window.AdaptiveEngine = {
   _syncTimer: null,
   startRemoteSync() {
     if (this._syncTimer) return;
+
+    // Instant cross-tab sync: listen for localStorage changes from admin tab
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'secure_llm_adaptive_rules' && e.newValue) {
+        try {
+          const updated = JSON.parse(e.newValue);
+          if (Array.isArray(updated)) {
+            this.rules = updated;
+          }
+        } catch (err) {
+          // ignore
+        }
+      }
+    });
+
+    // Periodic sync from both localStorage and server
     this.syncFromServer();
     this._syncTimer = setInterval(() => {
       this.syncFromServer();
