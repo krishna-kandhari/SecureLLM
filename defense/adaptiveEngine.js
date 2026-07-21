@@ -66,14 +66,14 @@ window.AdaptiveEngine = {
     }
   },
 
-  // Start a 3-second background sync loop to pull admin-blocked rules in real-time
+  // Start a 2-second background sync loop to pull admin-blocked rules in real-time
   _syncTimer: null,
   startRemoteSync() {
     if (this._syncTimer) return;
     this.syncFromServer();
     this._syncTimer = setInterval(() => {
       this.syncFromServer();
-    }, 3000);
+    }, 2000);
   },
 
   saveWhitelist() {

@@ -1,5 +1,28 @@
 // Vercel Serverless Function for /api/logs
-let logsStore = [];
+// Uses /tmp file storage to persist logs across warm invocations
+const fs = require('fs');
+const path = require('path');
+
+const LOGS_FILE = '/tmp/securellm_logs.json';
+
+function readLogs() {
+  try {
+    if (fs.existsSync(LOGS_FILE)) {
+      return JSON.parse(fs.readFileSync(LOGS_FILE, 'utf8'));
+    }
+  } catch (e) {
+    console.warn('Failed to read logs file:', e.message);
+  }
+  return [];
+}
+
+function writeLogs(logs) {
+  try {
+    fs.writeFileSync(LOGS_FILE, JSON.stringify(logs), 'utf8');
+  } catch (e) {
+    console.warn('Failed to write logs file:', e.message);
+  }
+}
 
 module.exports = (req, res) => {
   // Enable CORS
@@ -18,19 +41,22 @@ module.exports = (req, res) => {
   if (req.method === 'POST') {
     const logItem = req.body;
     if (logItem && logItem.prompt) {
-      logsStore.unshift(logItem);
-      if (logsStore.length > 2000) {
-        logsStore.pop();
+      const logs = readLogs();
+      logs.unshift(logItem);
+      if (logs.length > 2000) {
+        logs.length = 2000;
       }
+      writeLogs(logs);
     }
     return res.status(200).json({ status: 'success', id: logItem ? logItem.id : null });
   }
 
   if (req.method === 'DELETE') {
-    logsStore = [];
+    writeLogs([]);
     return res.status(200).json({ status: 'cleared' });
   }
 
-  // GET request - return all logs
-  return res.status(200).json(logsStore);
+  // GET request - return all persisted logs
+  const logs = readLogs();
+  return res.status(200).json(logs);
 };
