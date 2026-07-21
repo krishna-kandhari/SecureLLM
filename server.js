@@ -101,9 +101,13 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`  Secure LLM Production Server running on port ${PORT}`);
-  console.log(`  Live Telemetry API: http://localhost:${PORT}/api/logs`);
-  console.log(`====================================================`);
-});
+module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`====================================================`);
+    console.log(`  Secure LLM Production Server running on port ${PORT}`);
+    console.log(`  Live Telemetry API: http://localhost:${PORT}/api/logs`);
+    console.log(`====================================================`);
+  });
+}
