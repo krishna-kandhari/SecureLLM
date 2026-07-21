@@ -48,14 +48,10 @@ window.AdaptiveEngine = {
       const stored = localStorage.getItem('secure_llm_adaptive_rules');
       if (stored) {
         const localStored = JSON.parse(stored);
-        if (Array.isArray(localStored)) {
-          const currentIds = new Set(this.rules.map(r => r.id));
-          for (const rule of localStored) {
-            if (rule && rule.id && !currentIds.has(rule.id)) {
-              this.rules.unshift(rule);
-              currentIds.add(rule.id);
-            }
-          }
+        if (Array.isArray(localStored) && localStored.length > this.rules.length) {
+          // localStorage has more rules than memory, adopt them all
+          this.rules = localStored;
+          console.log('[SecureLLM Sync] Loaded', localStored.length, 'rules from localStorage');
         }
       }
     } catch (e) {
@@ -80,6 +76,7 @@ window.AdaptiveEngine = {
       }
       if (added > 0) {
         this.saveRules();
+        console.log('[SecureLLM Sync] Added', added, 'new rules from server. Total:', this.rules.length);
       }
     } catch (e) {
       // Silently fail — server may be unavailable
