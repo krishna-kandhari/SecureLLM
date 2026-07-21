@@ -252,8 +252,22 @@ window.AdaptiveEngine = {
   },
 
   deleteRule(ruleId) {
-    this.rules = this.rules.filter(r => r.id !== ruleId);
+    const deletedRule = this.rules.find(r => r && r.id === ruleId);
+    this.rules = this.rules.filter(r => r && r.id !== ruleId);
     this.saveRules();
+
+    if (deletedRule && deletedRule.patternText) {
+      // Un-escape pattern text and whitelist it so it is instantly allowed without refresh
+      const rawText = deletedRule.patternText.replace(/\\([.*+?^${}()|[\]\\])/g, '$1');
+      if (rawText && rawText.length > 0) {
+        const norm = rawText.trim().toLowerCase();
+        if (!this.whitelistedPrompts.includes(norm)) {
+          this.whitelistedPrompts.unshift(norm);
+          this.saveWhitelist();
+        }
+      }
+    }
+
     this.syncStateToServer();
   },
 
