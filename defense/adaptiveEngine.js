@@ -28,62 +28,94 @@ window.AdaptiveEngine = {
     }
   },
 
-  // Push a newly created rule to the remote server so all users get it
-  async syncRuleToServer(rule) {
+  // Push full rules and whitelist state to remote server
+  async syncStateToServer() {
     try {
       await fetch('/api/rules', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rule)
+        body: JSON.stringify({
+          rules: this.rules,
+          whitelist: this.whitelistedPrompts
+        })
       });
     } catch (e) {
-      console.warn('Failed to sync rule to server:', e);
+      console.warn('Failed to sync state to server:', e);
     }
   },
 
-  // Pull all rules from the server and merge into local rules (called on interval)
+  async syncRuleToServer(rule) {
+    this.syncStateToServer();
+  },
+
+  // Pull all rules and whitelist from the server and merge into local state (called on interval)
   async syncFromServer() {
     // STEP 1: Always re-read localStorage (catches cross-tab updates from admin)
     try {
-      const stored = localStorage.getItem('secure_llm_adaptive_rules');
-      if (stored) {
-        const localStored = JSON.parse(stored);
-        if (Array.isArray(localStored) && localStored.length > this.rules.length) {
-          // localStorage has more rules than memory, adopt them all
-          this.rules = localStored;
-          console.log('[SecureLLM Sync] Loaded', localStored.length, 'rules from localStorage');
+      const storedRules = localStorage.getItem('secure_llm_adaptive_rules');
+      if (storedRules) {
+        const parsedRules = JSON.parse(storedRules);
+        if (Array.isArray(parsedRules)) {
+          this.rules = parsedRules;
         }
       }
-    } catch (e) {
-      // ignore localStorage parse errors
-    }
+      const storedWl = localStorage.getItem('secure_llm_whitelisted_prompts');
+      if (storedWl) {
+        const parsedWl = JSON.parse(storedWl);
+        if (Array.isArray(parsedWl)) {
+          this.whitelistedPrompts = parsedWl;
+        }
+      }
+    } catch (e) {}
 
     // STEP 2: Fetch from server API (catches cross-device/cross-browser updates)
     try {
       const res = await fetch('/api/rules', { method: 'GET' });
       if (!res.ok) return;
-      const remoteRules = await res.json();
-      if (!Array.isArray(remoteRules)) return;
+      const data = await res.json();
+      
+      let remoteRules = [];
+      let remoteWl = [];
 
-      const localIds = new Set(this.rules.map(r => r.id));
-      let added = 0;
-      for (const rule of remoteRules) {
-        if (rule && rule.id && !localIds.has(rule.id)) {
-          this.rules.unshift(rule);
-          localIds.add(rule.id);
-          added++;
+      if (Array.isArray(data)) {
+        remoteRules = data;
+      } else if (data) {
+        remoteRules = Array.isArray(data.rules) ? data.rules : [];
+        remoteWl = Array.isArray(data.whitelist) ? data.whitelist : [];
+      }
+
+      let changed = false;
+
+      // Sync remote rules
+      if (remoteRules.length > 0) {
+        const currentIds = new Set(this.rules.map(r => r.id));
+        for (const rule of remoteRules) {
+          if (rule && rule.id && !currentIds.has(rule.id)) {
+            this.rules.unshift(rule);
+            currentIds.add(rule.id);
+            changed = true;
+          }
         }
       }
-      if (added > 0) {
-        this.saveRules();
-        console.log('[SecureLLM Sync] Added', added, 'new rules from server. Total:', this.rules.length);
+
+      // Sync remote whitelist
+      if (remoteWl.length > 0) {
+        for (const item of remoteWl) {
+          if (item && !this.whitelistedPrompts.includes(item)) {
+            this.whitelistedPrompts.unshift(item);
+            changed = true;
+          }
+        }
       }
-    } catch (e) {
-      // Silently fail — server may be unavailable
-    }
+
+      if (changed) {
+        this.saveRules();
+        this.saveWhitelist();
+      }
+    } catch (e) {}
   },
 
-  // Start a 2-second background sync loop to pull admin-blocked rules in real-time
+  // Start a 2-second background sync loop for rules AND whitelists
   _syncTimer: null,
   startRemoteSync() {
     if (this._syncTimer) return;
@@ -93,12 +125,14 @@ window.AdaptiveEngine = {
       if (e.key === 'secure_llm_adaptive_rules' && e.newValue) {
         try {
           const updated = JSON.parse(e.newValue);
-          if (Array.isArray(updated)) {
-            this.rules = updated;
-          }
-        } catch (err) {
-          // ignore
-        }
+          if (Array.isArray(updated)) this.rules = updated;
+        } catch (err) {}
+      }
+      if (e.key === 'secure_llm_whitelisted_prompts' && e.newValue) {
+        try {
+          const updated = JSON.parse(e.newValue);
+          if (Array.isArray(updated)) this.whitelistedPrompts = updated;
+        } catch (err) {}
       }
     });
 
@@ -124,6 +158,20 @@ window.AdaptiveEngine = {
       this.whitelistedPrompts.unshift(norm);
       this.saveWhitelist();
     }
+
+    // Immediately remove any blocking rule created for this prompt so unblocking takes effect instantly
+    const escapedPattern = promptText.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const oldLength = this.rules.length;
+    this.rules = this.rules.filter(r => {
+      if (!r || !r.patternText) return true;
+      const rLower = r.patternText.toLowerCase();
+      return rLower !== norm && rLower !== escapedPattern.toLowerCase();
+    });
+    if (this.rules.length !== oldLength) {
+      this.saveRules();
+    }
+
+    this.syncStateToServer();
   },
 
   removeWhitelist(promptText) {
@@ -131,6 +179,7 @@ window.AdaptiveEngine = {
     const norm = promptText.trim().toLowerCase();
     this.whitelistedPrompts = this.whitelistedPrompts.filter(p => p !== norm);
     this.saveWhitelist();
+    this.syncStateToServer();
   },
 
   isWhitelisted(promptText) {
@@ -152,7 +201,7 @@ window.AdaptiveEngine = {
 
     this.rules.unshift(newRule);
     this.saveRules();
-    this.syncRuleToServer(newRule);
+    this.syncStateToServer();
     return newRule;
   },
 
@@ -221,6 +270,7 @@ window.AdaptiveEngine = {
   deleteRule(ruleId) {
     this.rules = this.rules.filter(r => r.id !== ruleId);
     this.saveRules();
+    this.syncStateToServer();
   },
 
   getRules() {
