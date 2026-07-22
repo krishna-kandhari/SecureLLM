@@ -94,8 +94,27 @@ textarea, input, select {
   display: flex;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   position: relative;
   background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+}
+
+/* Sidebar Overlay for Mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 899;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
 }
 
 /* Sidebar */
@@ -319,6 +338,25 @@ textarea, input, select {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.btn-share-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--accent-color, #6366f1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-share-link:hover {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.5);
 }
 
 .api-status-badge {
@@ -873,11 +911,21 @@ textarea, input, select {
 
 /* Media Queries & Mobile Responsiveness */
 @media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
+    height: 100dvh;
     z-index: 900;
     width: 280px;
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
@@ -891,49 +939,78 @@ textarea, input, select {
 
   .toggle-sidebar-btn {
     display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .main-header {
-    padding: 10px 12px;
+    padding: 8px 12px;
+    height: 56px;
   }
 
   .header-left {
     gap: 8px;
   }
 
+  .header-right {
+    gap: 6px;
+  }
+
   .model-selector-wrapper {
-    max-width: 180px;
+    max-width: 170px;
+    padding: 4px 8px;
   }
 
   .model-selector-wrapper select {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
   }
 
   .messages-container {
-    padding: 12px 10px;
+    padding: 10px 8px;
   }
 
   .message-content-wrapper {
-    max-width: 92%;
+    max-width: 95%;
   }
 
   .message-bubble {
-    padding: 10px 14px;
+    padding: 10px 12px;
     font-size: 0.9rem;
   }
 
+  .message-bubble pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+  }
+
+  .message-bubble table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .input-area-wrapper {
-    padding: 0 10px 12px 10px;
+    padding: 0 8px max(10px, env(safe-area-inset-bottom)) 8px;
   }
 
   .input-box-container {
-    padding: 8px 10px;
+    padding: 6px 10px;
     border-radius: 14px;
   }
 
   .chat-textarea {
-    font-size: 0.9rem;
-    min-height: 42px;
+    font-size: 16px !important; /* Prevents auto-zoom on iOS Safari */
+    min-height: 40px;
+    padding: 6px 4px;
+  }
+
+  .btn-send, .btn-stop {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
   }
 
   .suggestion-grid {
@@ -942,10 +1019,10 @@ textarea, input, select {
   }
 
   .modal-card-large {
-    width: 96%;
-    max-height: 92vh;
+    width: 95vw;
+    max-height: 90vh;
     padding: 14px;
-    margin: 10px auto;
+    margin: 8px auto;
   }
 
   .rule-form-grid {
@@ -965,27 +1042,81 @@ textarea, input, select {
 
   .prompt-cell {
     max-width: 180px;
-    min-width: 130px;
+    min-width: 120px;
     font-size: 0.75rem;
   }
 
   .modal-tabs-header {
-    gap: 8px;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal-tab-btn {
-    padding: 6px 8px;
-    font-size: 0.8rem;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 480px) {
+  .main-header {
+    padding: 6px 8px;
+  }
+
+  .model-selector-wrapper {
+    max-width: 135px;
+    padding: 3px 6px;
+  }
+
+  .model-selector-wrapper select {
+    font-size: 0.72rem;
+  }
+
+  .btn-share-link span {
+    display: none;
+  }
+
+  .btn-share-link {
+    padding: 6px 8px;
+    border-radius: 99px;
+  }
+
+  #api-status-text {
+    display: none;
+  }
+
+  .api-status-badge {
+    padding: 6px 8px;
+    border-radius: 99px;
+  }
+
+  .welcome-container {
+    padding: 12px 8px;
+  }
+
+  .welcome-logo {
+    font-size: 2.2rem;
+  }
+
   .welcome-title {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   .welcome-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .suggestion-card {
+    padding: 10px 12px;
+  }
+
+  .suggestion-title {
     font-size: 0.85rem;
+  }
+
+  .suggestion-desc {
+    font-size: 0.75rem;
   }
 
   .modal-header-actions {

@@ -5,6 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // --- DOM Elements ---
   const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
   const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
   const btnNewChat = document.getElementById('btn-new-chat');
   const chatHistoryList = document.getElementById('chat-history-list');
@@ -129,10 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateApiStatus();
     renderChatHistory();
 
-    if (chats.length > 0) {
+    // Always start a brand new chat when opening the link/page
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceNewFromUrl = urlParams.has('new') || urlParams.get('chat') === 'new';
+
+    if (!forceNewFromUrl && chats.length > 0 && chats[0].messages && chats[0].messages.length === 0) {
       loadChat(chats[0].id);
     } else {
-      createNewChat(false);
+      createNewChat(true);
     }
   }
 
@@ -240,6 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function createNewChat(switchToIt = true) {
+    // Keep past chats that have messages, clean up unsaved empty chats
+    chats = chats.filter(c => c.messages && c.messages.length > 0);
+
     const newChat = {
       id: 'chat_' + Date.now(),
       title: 'New Chat',
@@ -307,13 +315,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
       item.appendChild(titleSpan);
       item.appendChild(delBtn);
-      item.addEventListener('click', () => loadChat(chat.id));
+      item.addEventListener('click', () => {
+        loadChat(chat.id);
+        if (window.innerWidth <= 768) closeSidebar();
+      });
       
       chatHistoryList.appendChild(item);
     });
   }
 
-  btnNewChat.addEventListener('click', () => createNewChat(true));
+  function openSidebar() {
+    sidebar.classList.add('open');
+    if (sidebarOverlay) sidebarOverlay.classList.add('active');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+  }
+
+  btnNewChat.addEventListener('click', () => {
+    createNewChat(true);
+    if (window.innerWidth <= 768) closeSidebar();
+  });
+
+  const btnShareLink = document.getElementById('btn-share-link');
+  if (btnShareLink) {
+    btnShareLink.addEventListener('click', () => {
+      const shareUrl = window.location.origin + window.location.pathname + '?new=true';
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        const span = btnShareLink.querySelector('span');
+        const originalText = span ? span.textContent : 'Share Link';
+        if (span) span.textContent = 'Link Copied!';
+        setTimeout(() => {
+          if (span) span.textContent = originalText;
+        }, 2000);
+      }).catch(() => {
+        const tempInput = document.createElement('input');
+        tempInput.value = shareUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        const span = btnShareLink.querySelector('span');
+        if (span) {
+          span.textContent = 'Link Copied!';
+          setTimeout(() => { span.textContent = 'Share Link'; }, 2000);
+        }
+      });
+    });
+  }
 
   btnClearHistory.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear all chat history?')) {
@@ -323,16 +374,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Sidebar toggle & mobile outside click dismissal
+  // Sidebar toggle & mobile overlay dismissal
   btnToggleSidebar.addEventListener('click', (e) => {
     e.stopPropagation();
-    sidebar.classList.toggle('open');
+    if (sidebar.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
   });
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeSidebar);
+  }
 
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
       if (!sidebar.contains(e.target) && !btnToggleSidebar.contains(e.target)) {
-        sidebar.classList.remove('open');
+        closeSidebar();
       }
     }
   });

@@ -53,6 +53,9 @@
       </div>
     </aside>
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     <!-- Main Chat Content -->
     <main class="main-content">
       
@@ -75,6 +78,10 @@
         </div>
 
         <div class="header-right">
+          <button class="btn-share-link" id="btn-share-link" title="Copy shareable link (always opens a new chat)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            <span>Share Link</span>
+          </button>
           <div class="api-status-badge" id="api-status-badge">
             <span class="status-dot"></span>
             <span id="api-status-text">Set API Key</span>
