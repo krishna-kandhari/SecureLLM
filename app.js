@@ -116,6 +116,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // --- Dynamic Model Fetcher & Synchronizer ---
+  async function fetchGroqModels() {
+    if (!apiKey || apiKey.length < 10) return;
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && Array.isArray(data.data) && data.data.length > 0) {
+        const existingValues = new Set(Array.from(modelSelect.options).map(o => o.value));
+        data.data.forEach(m => {
+          if (m.id && !existingValues.has(m.id)) {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.id;
+            modelSelect.appendChild(opt);
+          }
+        });
+
+        if (selectedModel && Array.from(modelSelect.options).some(o => o.value === selectedModel)) {
+          modelSelect.value = selectedModel;
+        }
+      }
+    } catch (err) {
+      console.warn('Groq dynamic model fetch skipped/failed:', err.message);
+    }
+  }
+
   // --- Initialization ---
   async function init() {
     await ensureApiKeyLoaded();
@@ -125,10 +157,23 @@ document.addEventListener('DOMContentLoaded', () => {
     systemPromptInput.value = systemPrompt;
     temperatureInput.value = temperature;
     tempValDisplay.textContent = temperature;
-    modelSelect.value = selectedModel;
+
+    if (selectedModel) {
+      const exists = Array.from(modelSelect.options).some(o => o.value === selectedModel);
+      if (!exists) {
+        const opt = document.createElement('option');
+        opt.value = selectedModel;
+        opt.textContent = selectedModel;
+        modelSelect.appendChild(opt);
+      }
+      modelSelect.value = selectedModel;
+    }
 
     updateApiStatus();
     renderChatHistory();
+
+    // Fetch dynamic models in background
+    fetchGroqModels();
 
     // Always start a brand new chat when opening the link/page
     const urlParams = new URLSearchParams(window.location.search);
@@ -163,6 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
     systemPromptInput.value = systemPrompt;
     temperatureInput.value = temperature;
     tempValDisplay.textContent = temperature;
+
+    const customModelInput = document.getElementById('custom-model-input');
+    if (customModelInput) {
+      customModelInput.value = localStorage.getItem('groq_custom_model') || '';
+    }
     
     const remoteLogUrlInput = document.getElementById('remote-log-url-input');
     if (remoteLogUrlInput) {
@@ -222,6 +272,25 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('groq_system_prompt', systemPrompt);
     localStorage.setItem('groq_temperature', temperature.toString());
 
+    const customModelInput = document.getElementById('custom-model-input');
+    if (customModelInput) {
+      const customVal = customModelInput.value.trim();
+      if (customVal) {
+        localStorage.setItem('groq_custom_model', customVal);
+        selectedModel = customVal;
+        localStorage.setItem('groq_selected_model', selectedModel);
+
+        const exists = Array.from(modelSelect.options).some(o => o.value === selectedModel);
+        if (!exists) {
+          const opt = document.createElement('option');
+          opt.value = selectedModel;
+          opt.textContent = selectedModel;
+          modelSelect.appendChild(opt);
+        }
+        modelSelect.value = selectedModel;
+      }
+    }
+
     const remoteLogUrlInput = document.getElementById('remote-log-url-input');
     if (remoteLogUrlInput) {
       const url = remoteLogUrlInput.value.trim();
@@ -230,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateApiStatus();
+    fetchGroqModels();
     closeModal();
   });
 
