@@ -941,6 +941,8 @@ textarea, input, select {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 36px;
+    height: 36px;
   }
 
   .main-header {
@@ -1018,21 +1020,41 @@ textarea, input, select {
     gap: 8px;
   }
 
-  .modal-card-large {
+  /* Modals Responsiveness */
+  .modal-card {
+    width: 94vw;
+    max-height: 90vh;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .modal-card.wide-modal {
     width: 95vw;
     max-height: 90vh;
     padding: 14px;
     margin: 8px auto;
   }
 
-  .rule-form-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  .audit-controls-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
-  .audit-table-container {
+  .audit-stats {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .audit-table-wrapper {
+    max-height: 50vh;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .audit-table {
+    min-width: 650px;
   }
 
   .audit-table th, .audit-table td {
@@ -1046,6 +1068,16 @@ textarea, input, select {
     font-size: 0.75rem;
   }
 
+  .rule-form-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  #btn-add-adaptive-rule {
+    width: 100%;
+    margin-top: 4px;
+  }
+
   .modal-tabs-header {
     gap: 6px;
     overflow-x: auto;
@@ -1057,15 +1089,34 @@ textarea, input, select {
     font-size: 0.78rem;
     white-space: nowrap;
   }
+
+  .prompt-modal-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .prompt-modal-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .main-header {
     padding: 6px 8px;
   }
 
   .model-selector-wrapper {
-    max-width: 135px;
+    max-width: 130px;
     padding: 3px 6px;
   }
 
@@ -1089,6 +1140,10 @@ textarea, input, select {
   .api-status-badge {
     padding: 6px 8px;
     border-radius: 99px;
+  }
+
+  .input-info {
+    display: none;
   }
 
   .welcome-container {
@@ -1119,18 +1174,14 @@ textarea, input, select {
     font-size: 0.75rem;
   }
 
-  .modal-header-actions {
-    flex-wrap: wrap;
-    gap: 6px;
+  .lock-card {
+    width: 94vw;
+    padding: 18px 14px;
   }
 
-  .stat-badge {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-  }
-
-  .btn-sidebar-option span {
-    font-size: 0.8rem;
+  .stat-pill {
+    font-size: 0.7rem;
+    padding: 3px 8px;
   }
 }
 
@@ -1206,6 +1257,27 @@ textarea, input, select {
   width: 95%;
 }
 
+.prompt-view-modal-card {
+  max-width: 650px !important;
+  width: 94%;
+}
+
+.prompt-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.active-rules-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .audit-controls-bar {
   display: flex;
   align-items: center;
@@ -1217,6 +1289,7 @@ textarea, input, select {
 .audit-stats {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .stat-pill {
