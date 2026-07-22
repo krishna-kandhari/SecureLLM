@@ -130,8 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data && Array.isArray(data.data) && data.data.length > 0) {
         const existingValues = new Set(Array.from(modelSelect.options).map(o => o.value));
-        data.data.forEach(m => {
-          if (m.id && !existingValues.has(m.id)) {
+        const chatModels = data.data.filter(m => {
+          if (!m.id || m.active === false) return false;
+          const id = m.id.toLowerCase();
+          return !id.includes('whisper') && !id.includes('guard') && !id.includes('embed') && !id.includes('safetensors');
+        });
+
+        chatModels.forEach(m => {
+          if (!existingValues.has(m.id)) {
             const opt = document.createElement('option');
             opt.value = m.id;
             opt.textContent = m.id;
