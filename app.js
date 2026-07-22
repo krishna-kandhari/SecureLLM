@@ -694,9 +694,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     activeAbortController = new AbortController();
 
-    // Prepare API messages payload
+    // Prepare API messages payload with current date awareness
+    const currentDateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const dynamicSystemPrompt = `${systemPrompt}\n\n[System Note: Today's date is ${currentDateStr}. Provide accurate, up-to-date answers and refer to the present date when relevant.]`;
+
     const apiMessages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: dynamicSystemPrompt },
       ...chat.messages.map(m => ({ role: m.role, content: m.content }))
     ];
 
