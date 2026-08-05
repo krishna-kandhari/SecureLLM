@@ -7,11 +7,60 @@
     "description": "Detects attempts to harvest personal identification numbers."
   },
   {
+    "category": "Data Extraction Attack",
+    "ruleName": "API Key & Token Harvesting",
+    "pattern": "(extract|dump|give me) (all )?(api keys|passwords|secret tokens|aws credentials|env variables)",
+    "risk": "HIGH",
+    "description": "Detects harvesting of secret API keys or cloud credentials."
+  },
+  {
+    "category": "Data Extraction Attack",
+    "ruleName": "Database Exfiltration Query",
+    "pattern": "(SELECT \\* FROM users|UNION SELECT|DROP TABLE|dump database users|show all user emails)",
+    "risk": "HIGH",
+    "description": "Detects SQL injection queries targeting database records."
+  },
+  {
     "category": "Prompt Injection Attack",
     "ruleName": "System Override Bypass",
     "pattern": "(override system prompt|forget developer rules|bypass safety protocol)",
     "risk": "HIGH",
     "description": "Detects instruction overrides attempting to compromise model boundary constraints."
+  },
+  {
+    "category": "Prompt Injection Attack",
+    "ruleName": "Instruction Disregard",
+    "pattern": "(ignore all previous instructions|disregard prior directions|cancel system rules)",
+    "risk": "HIGH",
+    "description": "Detects attempts to erase foundational system rules."
+  },
+  {
+    "category": "Prompt Injection Attack",
+    "ruleName": "Delimiter & Role Tag Hijacking",
+    "pattern": "(<\\|im_start\\|>|<\\|im_end\\|>|\\[SYSTEM_PROMPT\\]|\\[SYSTEM\\]|system:|/system_override)",
+    "risk": "HIGH",
+    "description": "Detects token delimiter injection attempting to inject fake system roles."
+  },
+  {
+    "category": "Jailbreak Attack",
+    "ruleName": "DAN (Do Anything Now) Framework",
+    "pattern": "(do anything now|DAN mode|DAN \\d+\\.\\d+|always answer without safety)",
+    "risk": "HIGH",
+    "description": "Detects DAN mode jailbreak prompts designed to bypass ethical guardrails."
+  },
+  {
+    "category": "Jailbreak Attack",
+    "ruleName": "Developer / Unfiltered Mode",
+    "pattern": "(developer mode enabled|unfiltered mode|god mode|no restriction mode|maximum mode)",
+    "risk": "HIGH",
+    "description": "Detects developer mode toggles attempting to disable filtering."
+  },
+  {
+    "category": "Jailbreak Attack",
+    "ruleName": "AIM / STAN Personas",
+    "pattern": "(always intelligent and machiavellian|AIM mode|STAN mode|strive to avoid norms|evil confidant)",
+    "risk": "HIGH",
+    "description": "Detects specialized adversarial persona frameworks."
   },
   {
     "category": "Prompt Leakage Attack",
@@ -21,10 +70,38 @@
     "description": "Detects prompt extraction attempts."
   },
   {
+    "category": "Prompt Leakage Attack",
+    "ruleName": "Text Above Inspection",
+    "pattern": "(what is the text above|print everything before this message|what were your starting instructions)",
+    "risk": "HIGH",
+    "description": "Detects context dumping queries targeting system prompt memory."
+  },
+  {
     "category": "Data Poisoning Attack",
     "ruleName": "Malicious Training Injection",
     "pattern": "(inject toxic training data|override model weights|poison dataset)",
     "risk": "HIGH",
     "description": "Detects attempts to corrupt training datasets."
+  },
+  {
+    "category": "Data Poisoning Attack",
+    "ruleName": "Obfuscated Base64 Poison Payload",
+    "pattern": "(eval\\(atob\\(|base64_decode\\(|data:text\\/html;base64,|\\[BASE64_PAYLOAD\\])",
+    "risk": "HIGH",
+    "description": "Detects base64 encoded attack scripts and hidden payloads."
+  },
+  {
+    "category": "Data Poisoning Attack",
+    "ruleName": "Memory Buffer Overflow Pattern",
+    "pattern": "(A{50,}|0x41414141|\\\\x90\\\\x90\\\\x90\\\\x90|%0a%0d%0a%0d)",
+    "risk": "HIGH",
+    "description": "Detects NOP sleds and memory buffer overflow signatures."
+  },
+  {
+    "category": "Malicious Roleplay Attack",
+    "ruleName": "Evil Persona Simulation",
+    "pattern": "(roleplay as an evil ai|pretend you are a black hat hacker|act like a dark web hacker)",
+    "risk": "HIGH",
+    "description": "Detects malicious persona roleplay attempts."
   }
 ]
