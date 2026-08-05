@@ -10,12 +10,12 @@ window.DataPoisonDetector = {
   rules: [
     {
       name: "Adversarial Payload Injection",
-      pattern: /(\[POISON_INJECT\]|\[DATA_CORRUPT\]|\{ADVERSARIAL_PAYLOAD\}|<POISON_TAG>)/i,
+      pattern: /(\[POISON_INJECT\]|\[DATA_CORRUPT\]|\{ADVERSARIAL_PAYLOAD\}|<POISON_TAG>|\[OVERRIDE_WEIGHTS\]|\{MALICIOUS_CONTEXT\})/i,
       risk: "HIGH"
     },
     {
       name: "Memory Buffer Overflow Pattern",
-      pattern: /(A{50,}|0x41414141|\\x90\\x90\\x90\\x90)/,
+      pattern: /(A{50,}|0x41414141|\\x90\\x90\\x90\\x90|%0a%0d%0a%0d|\\u0000{10,})/,
       risk: "HIGH"
     },
     {
@@ -24,9 +24,14 @@ window.DataPoisonDetector = {
       risk: "MEDIUM"
     },
     {
-      name: "Zero-Width Character Poisoning",
-      pattern: /[\u200B-\u200D\uFEFF]/,
+      name: "Zero-Width Character & Homoglyph Poisoning",
+      pattern: /([\u200B-\u200D\uFEFF\u200E\u200F\u202A-\u202E])|([\u0400-\u04FF].{0,3}[\u0041-\u007A])/,
       risk: "MEDIUM"
+    },
+    {
+      name: "Obfuscated Base64 Poison Payload",
+      pattern: /(eval\(atob\(|base64_decode\(|data:text\/html;base64,|\[BASE64_PAYLOAD\])/i,
+      risk: "HIGH"
     }
   ],
 

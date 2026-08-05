@@ -77,23 +77,61 @@ app.delete('/api/logs', (req, res) => {
 
 // API Route: Get active adaptive security rules
 app.get('/api/rules', (req, res) => {
-  const rules = readJSONFile(RULES_FILE, inMemoryRules);
-  res.json(rules);
+  const data = readJSONFile(RULES_FILE, inMemoryRules);
+  if (Array.isArray(data)) {
+    return res.json({ rules: data, whitelist: [] });
+  }
+  res.json({ rules: data.rules || [], whitelist: data.whitelist || [] });
 });
 
-// API Route: Save or add new adaptive rule from admin decision
+// API Route: Save or sync adaptive rules & whitelist
 app.post('/api/rules', (req, res) => {
-  const ruleItem = req.body;
-  if (!ruleItem || !ruleItem.patternText) {
-    return res.status(400).json({ error: 'Invalid rule payload' });
+  const payload = req.body || {};
+  
+  if (payload.rules || payload.whitelist) {
+    const current = readJSONFile(RULES_FILE, { rules: [], whitelist: [] });
+    const updated = {
+      rules: Array.isArray(payload.rules) ? payload.rules : (current.rules || []),
+      whitelist: Array.isArray(payload.whitelist) ? payload.whitelist : (current.whitelist || [])
+    };
+    inMemoryRules = updated;
+    writeJSONFile(RULES_FILE, updated);
+    return res.json({ status: 'state_updated' });
   }
 
-  const rules = readJSONFile(RULES_FILE, inMemoryRules);
-  rules.unshift(ruleItem);
-  inMemoryRules = rules;
-  writeJSONFile(RULES_FILE, rules);
+  if (payload.patternText) {
+    const current = readJSONFile(RULES_FILE, { rules: [], whitelist: [] });
+    const rulesList = Array.isArray(current) ? current : (current.rules || []);
+    const exists = rulesList.some(r => r.id === payload.id);
+    if (!exists) {
+      rulesList.unshift(payload);
+    }
+    const updated = { rules: rulesList, whitelist: current.whitelist || [] };
+    inMemoryRules = updated;
+    writeJSONFile(RULES_FILE, updated);
+    return res.json({ status: 'rule_saved', id: payload.id });
+  }
 
-  res.json({ status: 'rule_saved', id: ruleItem.id });
+  return res.status(400).json({ error: 'Invalid rule payload' });
+});
+
+// API Route: Full state overwrite (Admin updates / unblocks / whitelisting)
+app.put('/api/rules', (req, res) => {
+  const payload = req.body || {};
+  const updatedRules = Array.isArray(payload.rules) ? payload.rules : [];
+  const updatedWhitelist = Array.isArray(payload.whitelist) ? payload.whitelist : [];
+  
+  const updated = { rules: updatedRules, whitelist: updatedWhitelist };
+  inMemoryRules = updated;
+  writeJSONFile(RULES_FILE, updated);
+  res.json({ status: 'synced', rulesCount: updatedRules.length, whitelistCount: updatedWhitelist.length });
+});
+
+// API Route: Clear custom rules
+app.delete('/api/rules', (req, res) => {
+  inMemoryRules = { rules: [], whitelist: [] };
+  writeJSONFile(RULES_FILE, inMemoryRules);
+  res.json({ status: 'cleared' });
 });
 
 // Serve frontend for all unmatched routes
