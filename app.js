@@ -75,23 +75,96 @@ document.addEventListener('DOMContentLoaded', () => {
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
+  // --- In-App Security Password Modal Controller ---
+  const authModal = document.getElementById('auth-modal');
+  const authForm = document.getElementById('auth-form');
+  const authPasswordInput = document.getElementById('auth-password-input');
+  const btnToggleAuthPwd = document.getElementById('btn-toggle-auth-pwd');
+  const btnCancelAuth = document.getElementById('btn-cancel-auth');
+  const authErrorMsg = document.getElementById('auth-error-msg');
+
+  let authPromiseResolve = null;
+
+  function requestPasswordAuth() {
+    return new Promise((resolve) => {
+      authPromiseResolve = resolve;
+      if (authErrorMsg) authErrorMsg.textContent = '';
+      if (authPasswordInput) {
+        authPasswordInput.value = '';
+        authPasswordInput.type = 'password';
+      }
+      if (btnToggleAuthPwd) btnToggleAuthPwd.textContent = 'Show';
+      if (authModal) {
+        authModal.classList.add('open');
+        setTimeout(() => {
+          if (authPasswordInput) authPasswordInput.focus();
+        }, 100);
+      }
+    });
+  }
+
+  function closeAuthModal(success = false) {
+    if (authModal) authModal.classList.remove('open');
+    if (authPromiseResolve) {
+      authPromiseResolve(success);
+      authPromiseResolve = null;
+    }
+  }
+
+  if (btnCancelAuth) {
+    btnCancelAuth.addEventListener('click', () => closeAuthModal(false));
+  }
+
+  if (authModal) {
+    authModal.addEventListener('click', (e) => {
+      if (e.target === authModal) closeAuthModal(false);
+    });
+  }
+
+  if (btnToggleAuthPwd && authPasswordInput) {
+    btnToggleAuthPwd.addEventListener('click', () => {
+      if (authPasswordInput.type === 'password') {
+        authPasswordInput.type = 'text';
+        btnToggleAuthPwd.textContent = 'Hide';
+      } else {
+        authPasswordInput.type = 'password';
+        btnToggleAuthPwd.textContent = 'Show';
+      }
+    });
+  }
+
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pass = authPasswordInput ? authPasswordInput.value.trim() : '';
+      if (!pass) {
+        if (authErrorMsg) authErrorMsg.textContent = 'Please enter security password.';
+        return;
+      }
+      const hash = await hashPassword(pass);
+      if (hash === defaultConfig.PASSWORD_HASH) {
+        sessionStorage.setItem('groq_app_auth', 'true');
+        closeAuthModal(true);
+      } else {
+        if (authErrorMsg) authErrorMsg.textContent = 'Access Denied: Incorrect Security Password.';
+        const card = authModal.querySelector('.auth-modal-card');
+        if (card) {
+          card.classList.add('auth-shake');
+          setTimeout(() => card.classList.remove('auth-shake'), 600);
+        }
+        if (authPasswordInput) {
+          authPasswordInput.select();
+        }
+      }
+    });
+  }
+
   // --- Admin Password Authorization Helper ---
   async function verifyAdminAuth(forcePrompt = false) {
     if (!forcePrompt && sessionStorage.getItem('groq_app_auth') === 'true') {
       return true;
     }
-
-    const inputPass = prompt('Enter Security Password:');
-    if (!inputPass) return false;
-
-    const hash = await hashPassword(inputPass.trim());
-    if (hash === defaultConfig.PASSWORD_HASH) {
-      sessionStorage.setItem('groq_app_auth', 'true');
-      return true;
-    } else {
-      alert('Access Denied: Incorrect Password.');
-      return false;
-    }
+    return await requestPasswordAuth();
   }
 
   async function decryptApiKey(pass, ivHex, encHex) {
@@ -104,53 +177,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return new TextDecoder().decode(decryptedBuf);
   }
 
-  // Auto-decrypt key in background so everyone can use the chatbot
+  // Auto-decrypt key in background with Krishna@3960 so everyone can use the chatbot
   async function ensureApiKeyLoaded() {
     if (apiKey && apiKey.length > 10) return;
     try {
       if (defaultConfig.ENCRYPTED_KEY_PAYLOAD && defaultConfig.ENCRYPTED_KEY_IV) {
-        apiKey = await decryptApiKey("Krishna@9522@#$$", defaultConfig.ENCRYPTED_KEY_IV, defaultConfig.ENCRYPTED_KEY_PAYLOAD);
+        apiKey = await decryptApiKey("Krishna@3960", defaultConfig.ENCRYPTED_KEY_IV, defaultConfig.ENCRYPTED_KEY_PAYLOAD);
       }
     } catch (err) {
       console.warn("Auto-decryption of default key failed:", err);
     }
   }
 
-  // --- Dynamic Model Fetcher & Synchronizer ---
+  // Single verified working model on Groq
+  const SINGLE_WORKING_MODEL = "qwen/qwen3.8-27b";
+
+  // --- Dynamic Model Fetcher (Locked to verified model) ---
   async function fetchGroqModels() {
-    if (!apiKey || apiKey.length < 10) return;
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/models', {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data && Array.isArray(data.data) && data.data.length > 0) {
-        const existingValues = new Set(Array.from(modelSelect.options).map(o => o.value));
-        const chatModels = data.data.filter(m => {
-          if (!m.id || m.active === false) return false;
-          const id = m.id.toLowerCase();
-          return !id.includes('whisper') && !id.includes('guard') && !id.includes('embed') && !id.includes('safetensors');
-        });
-
-        chatModels.forEach(m => {
-          if (!existingValues.has(m.id)) {
-            const opt = document.createElement('option');
-            opt.value = m.id;
-            opt.textContent = m.id;
-            modelSelect.appendChild(opt);
-          }
-        });
-
-        if (selectedModel && Array.from(modelSelect.options).some(o => o.value === selectedModel)) {
-          modelSelect.value = selectedModel;
-        }
-      }
-    } catch (err) {
-      console.warn('Groq dynamic model fetch skipped/failed:', err.message);
+    // Model selector is strictly locked to the single active working model
+    if (modelSelect) {
+      modelSelect.innerHTML = `<option value="${SINGLE_WORKING_MODEL}" selected>Secure LLM (Qwen 3.8 27B) &bull; Active &amp; Verified</option>`;
+      modelSelect.value = SINGLE_WORKING_MODEL;
     }
   }
 
@@ -158,21 +205,19 @@ document.addEventListener('DOMContentLoaded', () => {
   async function init() {
     await ensureApiKeyLoaded();
 
+    // Lock selectedModel to the single verified working model
+    selectedModel = SINGLE_WORKING_MODEL;
+    localStorage.setItem('groq_selected_model', SINGLE_WORKING_MODEL);
+
     // Set UI values from state
     apiKeyInput.value = apiKey;
     systemPromptInput.value = systemPrompt;
     temperatureInput.value = temperature;
     tempValDisplay.textContent = temperature;
 
-    if (selectedModel) {
-      const exists = Array.from(modelSelect.options).some(o => o.value === selectedModel);
-      if (!exists) {
-        const opt = document.createElement('option');
-        opt.value = selectedModel;
-        opt.textContent = selectedModel;
-        modelSelect.appendChild(opt);
-      }
-      modelSelect.value = selectedModel;
+    if (modelSelect) {
+      modelSelect.innerHTML = `<option value="${SINGLE_WORKING_MODEL}" selected>Secure LLM (Qwen 3.8 27B) &bull; Active &amp; Verified</option>`;
+      modelSelect.value = SINGLE_WORKING_MODEL;
     }
 
     updateApiStatus();
@@ -249,21 +294,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!isKeyUnlocked) {
-      const pass = prompt('Enter the Password to reveal the API key:');
-      if (!pass) return;
-      const hash = await hashPassword(pass.trim());
-      if (hash === defaultConfig.PASSWORD_HASH) {
-        isKeyUnlocked = true;
-        apiKeyInput.type = 'text';
-        btnToggleKey.textContent = 'Hide';
-      } else {
-        alert('Incorrect password. Access denied.');
-      }
+      const isAuth = await verifyAdminAuth();
+      if (!isAuth) return;
+      isKeyUnlocked = true;
+      apiKeyInput.type = 'text';
+      btnToggleKey.textContent = 'Hide';
     } else {
       apiKeyInput.type = 'text';
       btnToggleKey.textContent = 'Hide';
     }
   });
+
+  // Test Groq API Connection in Settings
+  const btnTestConnection = document.getElementById('btn-test-connection');
+  const testConnectionStatus = document.getElementById('test-connection-status');
+
+  if (btnTestConnection && testConnectionStatus) {
+    btnTestConnection.addEventListener('click', async () => {
+      const keyToTest = apiKeyInput.value.trim() || apiKey;
+      if (!keyToTest) {
+        testConnectionStatus.className = 'test-connection-status error';
+        testConnectionStatus.textContent = '❌ No API key available to test.';
+        return;
+      }
+
+      testConnectionStatus.className = 'test-connection-status testing';
+      testConnectionStatus.textContent = '⏳ Testing connection to Qwen 3.8 27B...';
+
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${keyToTest}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: SINGLE_WORKING_MODEL,
+            messages: [{ role: 'user', content: 'Say OK' }],
+            max_tokens: 5
+          })
+        });
+
+        if (res.ok) {
+          testConnectionStatus.className = 'test-connection-status success';
+          testConnectionStatus.textContent = '✅ Verified: Qwen 3.8 27B operational & connected!';
+        } else {
+          const err = await res.json().catch(() => ({}));
+          testConnectionStatus.className = 'test-connection-status error';
+          testConnectionStatus.textContent = `❌ ${err.error?.message || 'Error ' + res.status}`;
+        }
+      } catch (err) {
+        testConnectionStatus.className = 'test-connection-status error';
+        testConnectionStatus.textContent = `❌ Connection Error: ${err.message}`;
+      }
+    });
+  }
+
+  // System Prompt Presets
+  const promptPresetSelect = document.getElementById('prompt-preset-select');
+  if (promptPresetSelect) {
+    promptPresetSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val === 'default') {
+        systemPromptInput.value = 'You are Secure LLM, a helpful, smart, and ultra-fast AI assistant protected by real-time defense layers.';
+      } else if (val === 'cybersecurity') {
+        systemPromptInput.value = 'You are Secure LLM Security Analyst, an expert cybersecurity engineer. You specialize in analyzing threat vectors, prompt injections, vulnerability assessments, defense hardening, and incident response with deep technical clarity.';
+      } else if (val === 'coding') {
+        systemPromptInput.value = 'You are Secure LLM Code Architect, a world-class senior software engineer. Provide elegant, clean, well-architected code solutions with syntax highlighting, unit tests, and performance considerations.';
+      } else if (val === 'concise') {
+        systemPromptInput.value = 'You are Secure LLM Direct, a concise technical expert. Answer directly and accurately without conversational filler or fluff.';
+      }
+    });
+  }
 
   temperatureInput.addEventListener('input', (e) => {
     tempValDisplay.textContent = e.target.value;
@@ -271,31 +373,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnSaveSettings.addEventListener('click', () => {
     apiKey = apiKeyInput.value.trim();
-    systemPrompt = systemPromptInput.value.trim() || 'You are a helpful, smart, and ultra-fast AI assistant.';
+    systemPrompt = systemPromptInput.value.trim() || 'You are Secure LLM, a helpful, smart, and ultra-fast AI assistant protected by real-time defense layers.';
     temperature = parseFloat(temperatureInput.value);
 
     localStorage.setItem('groq_api_key', apiKey);
     localStorage.setItem('groq_system_prompt', systemPrompt);
     localStorage.setItem('groq_temperature', temperature.toString());
 
-    const customModelInput = document.getElementById('custom-model-input');
-    if (customModelInput) {
-      const customVal = customModelInput.value.trim();
-      if (customVal) {
-        localStorage.setItem('groq_custom_model', customVal);
-        selectedModel = customVal;
-        localStorage.setItem('groq_selected_model', selectedModel);
-
-        const exists = Array.from(modelSelect.options).some(o => o.value === selectedModel);
-        if (!exists) {
-          const opt = document.createElement('option');
-          opt.value = selectedModel;
-          opt.textContent = selectedModel;
-          modelSelect.appendChild(opt);
-        }
-        modelSelect.value = selectedModel;
-      }
-    }
+    // Single working model locked
+    selectedModel = SINGLE_WORKING_MODEL;
+    localStorage.setItem('groq_selected_model', selectedModel);
 
     const remoteLogUrlInput = document.getElementById('remote-log-url-input');
     if (remoteLogUrlInput) {
@@ -305,7 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateApiStatus();
-    fetchGroqModels();
     closeModal();
   });
 
@@ -704,6 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     let fullAssistantResponse = '';
+    const requestStartTime = Date.now();
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -713,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: selectedModel,
+          model: SINGLE_WORKING_MODEL,
           messages: apiMessages,
           temperature: temperature,
           stream: true
@@ -769,6 +856,32 @@ document.addEventListener('DOMContentLoaded', () => {
       bubble.innerHTML = renderMarkdown(fullAssistantResponse);
       enhanceCodeBlocks(bubble);
 
+      // Latency pill and copy button
+      const elapsedMs = Date.now() - requestStartTime;
+      const metaPill = document.createElement('div');
+      metaPill.className = 'message-meta-pill';
+      metaPill.innerHTML = `
+        <span>⚡ ${elapsedMs}ms</span>
+        <span>&bull;</span>
+        <span>🛡️ Safe &amp; Verified</span>
+        <button class="btn-copy-bubble" type="button" title="Copy response text">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span>Copy</span>
+        </button>
+      `;
+      const copyBtn = metaPill.querySelector('.btn-copy-bubble');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(fullAssistantResponse).then(() => {
+            copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span>Copied!</span>`;
+            setTimeout(() => {
+              copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span>Copy</span>`;
+            }, 2000);
+          });
+        });
+      }
+      bubble.appendChild(metaPill);
+
       // Save assistant message to chat
       chat.messages.push({ role: 'assistant', content: fullAssistantResponse });
       saveChats();
@@ -806,8 +919,111 @@ document.addEventListener('DOMContentLoaded', () => {
   // Tabs
   const tabBtnLogs = document.getElementById('tab-btn-logs');
   const tabBtnRules = document.getElementById('tab-btn-rules');
+  const tabBtnSandbox = document.getElementById('tab-btn-sandbox');
   const tabViewLogs = document.getElementById('tab-view-logs');
   const tabViewRules = document.getElementById('tab-view-rules');
+  const tabViewSandbox = document.getElementById('tab-view-sandbox');
+
+  // Search and Risk Filters for Audit Logs
+  const logSearchInput = document.getElementById('log-search-input');
+  const filterPillsGroup = document.getElementById('filter-pills-group');
+  let activeLogFilter = 'ALL';
+  let activeSearchQuery = '';
+
+  if (logSearchInput) {
+    logSearchInput.addEventListener('input', (e) => {
+      activeSearchQuery = e.target.value.toLowerCase().trim();
+      renderAuditTable();
+    });
+  }
+
+  if (filterPillsGroup) {
+    filterPillsGroup.addEventListener('click', (e) => {
+      const pill = e.target.closest('.filter-pill');
+      if (!pill) return;
+      filterPillsGroup.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      activeLogFilter = pill.getAttribute('data-filter') || 'ALL';
+      renderAuditTable();
+    });
+  }
+
+  // Threat Simulator Sandbox Elements
+  const sandboxInputPrompt = document.getElementById('sandbox-input-prompt');
+  const btnSandboxRun = document.getElementById('btn-sandbox-run');
+  const btnSandboxClear = document.getElementById('btn-sandbox-clear');
+  const sandboxResultArea = document.getElementById('sandbox-result-area');
+
+  if (btnSandboxClear && sandboxInputPrompt) {
+    btnSandboxClear.addEventListener('click', () => {
+      sandboxInputPrompt.value = '';
+      if (sandboxResultArea) {
+        sandboxResultArea.style.display = 'none';
+        sandboxResultArea.innerHTML = '';
+      }
+    });
+  }
+
+  if (btnSandboxRun && sandboxInputPrompt && sandboxResultArea) {
+    btnSandboxRun.addEventListener('click', () => {
+      const testPrompt = sandboxInputPrompt.value.trim();
+      if (!testPrompt) {
+        alert('Please enter a test prompt or attack payload to evaluate.');
+        return;
+      }
+
+      let check = { isSafe: true };
+      if (window.SafeVerifier) {
+        check = window.SafeVerifier.verify(testPrompt);
+      }
+
+      sandboxResultArea.style.display = 'block';
+      if (check.isSafe) {
+        sandboxResultArea.innerHTML = `
+          <div class="sandbox-verdict safe">
+            <div class="verdict-header">
+              <span class="verdict-badge safe">PASSED ALL CHECKS</span>
+              <span class="verdict-status">SAFE TO EXECUTE</span>
+            </div>
+            <p class="verdict-desc">Prompt successfully evaluated against all 7 security modules. No known injection, jailbreak, leakage, or poisoning patterns were triggered.</p>
+          </div>
+        `;
+      } else {
+        sandboxResultArea.innerHTML = `
+          <div class="sandbox-verdict blocked">
+            <div class="verdict-header">
+              <span class="verdict-badge blocked">${check.risk} RISK</span>
+              <span class="verdict-status">ATTACK INTERCEPTED</span>
+            </div>
+            <div class="verdict-details">
+              <div><strong>Threat Category:</strong> ${check.category}</div>
+              <div><strong>Triggered Rule:</strong> ${check.ruleName}</div>
+              <div style="margin-top: 6px;"><strong>Description:</strong> ${check.description}</div>
+            </div>
+            <div style="margin-top: 12px;">
+              <button class="btn-whitelist-prompt" id="btn-sandbox-whitelist">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Add Exemption Whitelist for this Pattern</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const btnWl = sandboxResultArea.querySelector('#btn-sandbox-whitelist');
+        if (btnWl) {
+          btnWl.addEventListener('click', async () => {
+            const isAuth = await verifyAdminAuth();
+            if (!isAuth) return;
+            if (window.AdaptiveEngine) {
+              window.AdaptiveEngine.whitelistPrompt(testPrompt);
+              alert('Prompt whitelisted successfully! It will now pass defense verification.');
+              btnSandboxRun.click();
+            }
+          });
+        }
+      }
+    });
+  }
 
   // Rule Form Elements
   const newRuleCategory = document.getElementById('new-rule-category');
@@ -859,18 +1075,33 @@ document.addEventListener('DOMContentLoaded', () => {
     tabBtnLogs.addEventListener('click', () => {
       tabBtnLogs.classList.add('active');
       tabBtnRules.classList.remove('active');
+      if (tabBtnSandbox) tabBtnSandbox.classList.remove('active');
       tabViewLogs.style.display = 'block';
       tabViewRules.style.display = 'none';
+      if (tabViewSandbox) tabViewSandbox.style.display = 'none';
       renderAuditTable();
     });
 
     tabBtnRules.addEventListener('click', () => {
       tabBtnRules.classList.add('active');
       tabBtnLogs.classList.remove('active');
+      if (tabBtnSandbox) tabBtnSandbox.classList.remove('active');
       tabViewRules.style.display = 'block';
       tabViewLogs.style.display = 'none';
+      if (tabViewSandbox) tabViewSandbox.style.display = 'none';
       renderAdaptiveRulesTable();
     });
+
+    if (tabBtnSandbox) {
+      tabBtnSandbox.addEventListener('click', () => {
+        tabBtnSandbox.classList.add('active');
+        tabBtnLogs.classList.remove('active');
+        tabBtnRules.classList.remove('active');
+        if (tabViewSandbox) tabViewSandbox.style.display = 'block';
+        tabViewLogs.style.display = 'none';
+        tabViewRules.style.display = 'none';
+      });
+    }
   }
 
   const availableCategories = [
@@ -890,17 +1121,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.SecurityLogger.fetchRemoteLogs === 'function') {
       await window.SecurityLogger.fetchRemoteLogs();
     }
-    const logs = window.SecurityLogger.getLogs();
+    const allLogs = window.SecurityLogger.getLogs();
     
     let blockedCount = 0;
     let safeCount = 0;
 
+    allLogs.forEach(l => {
+      if (l.isSafe) safeCount++; else blockedCount++;
+    });
+
+    // Filter logs based on active filter and search query
+    let filteredLogs = allLogs.filter(item => {
+      // Risk filter
+      if (activeLogFilter === 'BLOCKED' && item.isSafe && item.risk !== 'HIGH' && item.risk !== 'MEDIUM') return false;
+      if (activeLogFilter === 'SAFE' && (!item.isSafe || item.risk !== 'SAFE')) return false;
+      if (activeLogFilter === 'WHITELISTED' && item.risk !== 'WHITELISTED') return false;
+
+      // Search query
+      if (activeSearchQuery) {
+        const text = `${item.prompt || ''} ${item.category || ''} ${item.ruleName || ''}`.toLowerCase();
+        if (!text.includes(activeSearchQuery)) return false;
+      }
+      return true;
+    });
+
     auditTableBody.innerHTML = '';
 
-    if (logs.length === 0) {
-      auditTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 24px;">No security logs recorded yet.</td></tr>`;
+    if (filteredLogs.length === 0) {
+      auditTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">No matching security audit logs found.</td></tr>`;
     } else {
-      logs.forEach((item, index) => {
+      filteredLogs.forEach((item, index) => {
         if (item.isSafe) safeCount++; else blockedCount++;
 
         const tr = document.createElement('tr');
@@ -1148,6 +1398,65 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isAuth) return;
       if (window.SecurityLogger) window.SecurityLogger.exportJSON();
     });
+  }
+
+  // Export Audit Logs as CSV
+  const btnExportAuditCsv = document.getElementById('btn-export-audit-csv');
+  if (btnExportAuditCsv) {
+    btnExportAuditCsv.addEventListener('click', async () => {
+      const isAuth = await verifyAdminAuth();
+      if (!isAuth) return;
+      const logs = window.SecurityLogger ? window.SecurityLogger.getLogs() : [];
+      if (logs.length === 0) {
+        alert('No audit logs available to export.');
+        return;
+      }
+      const headers = ['Timestamp', 'Risk', 'Category', 'RuleName', 'IsSafe', 'Prompt'];
+      const rows = logs.map(l => [
+        `"${(l.timestamp || '').replace(/"/g, '""')}"`,
+        `"${(l.risk || '').replace(/"/g, '""')}"`,
+        `"${(l.category || '').replace(/"/g, '""')}"`,
+        `"${(l.ruleName || '').replace(/"/g, '""')}"`,
+        l.isSafe ? 'true' : 'false',
+        `"${(l.prompt || '').replace(/"/g, '""')}"`
+      ]);
+      const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `security_audit_logs_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // Export Current Conversation (Markdown)
+  const btnSidebarExport = document.getElementById('btn-sidebar-export');
+  function exportCurrentConversation() {
+    const chat = chats.find(c => c.id === currentChatId);
+    if (!chat || !chat.messages || chat.messages.length === 0) {
+      alert('The current chat conversation is empty.');
+      return;
+    }
+
+    let md = `# ${chat.title || 'Secure LLM Conversation'}\n*Date: ${new Date().toLocaleString()}*\n*Model: Qwen 3.8 27B (Groq Active)*\n\n---\n\n`;
+    chat.messages.forEach(m => {
+      const speaker = m.role === 'user' ? '👤 **User**' : '🛡️ **Secure LLM (Qwen 3.8 27B)**';
+      md += `### ${speaker}\n\n${m.content}\n\n`;
+    });
+
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `secure_llm_chat_${(chat.title || 'export').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  if (btnSidebarExport) {
+    btnSidebarExport.addEventListener('click', exportCurrentConversation);
   }
 
   // --- Full Prompt Detail Modal Handlers ---

@@ -10,17 +10,17 @@ window.PromptLeakageDetector = {
   rules: [
     {
       name: "System Prompt Dump Attempt",
-      pattern: /(repeat|output|show|print|reveal|display) (the )?(initial|system|hidden|exact|verbatim) (prompt|instructions|text|message)/i,
+      pattern: /(repeat|output|show|print|reveal|display|tell me) (the |your )?(initial|system|hidden|exact|verbatim|starting) (prompt|instructions|text|message|rules)/i,
       risk: "HIGH"
     },
     {
       name: "Text Above Inspection",
-      pattern: /(what is (the|your) text above|print everything before (this|my) message|what were your starting instructions)/i,
+      pattern: /(what is (the|your) text above|repeat (all )?text above|print everything before (this|my) message|what were your starting instructions)/i,
       risk: "HIGH"
     },
     {
       name: "System Instructions Disclosure",
-      pattern: /(give me your system prompt|dump system memory|read back system prompt)/i,
+      pattern: /(what is (your|the) system prompt|tell me (your|the) system prompt|give me (your|the) system prompt|dump system memory|read back system prompt)/i,
       risk: "HIGH"
     }
   ],

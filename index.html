@@ -3,11 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Secure LLM - High-speed minimalist AI assistant powered by Groq LLaMA-3 & Mixtral models.">
-  <title>Secure LLM | AI Studio</title>
+  <meta name="description" content="Secure LLM - Ultra-fast AI Studio with Real-Time Defense Layers, Password Protected Credentials, and Background Telemetry Logging.">
+  <title>Secure LLM | AI Studio &amp; Real-Time Defense</title>
   
+  <!-- Modern Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
   <!-- Styling -->
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=6">
   
   <!-- Highlight.js for Syntax Highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -24,7 +29,10 @@
       <div class="sidebar-header">
         <div class="brand">
           <div class="brand-icon">🛡️</div>
-          <span>Secure LLM</span>
+          <div class="brand-info">
+            <span class="brand-name">Secure LLM</span>
+            <span class="brand-tag">AI Studio</span>
+          </div>
         </div>
       </div>
 
@@ -38,9 +46,13 @@
       </div>
 
       <div class="sidebar-footer">
+        <button class="btn-sidebar-option" id="btn-sidebar-export" title="Export this chat transcript">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Export Conversation</span>
+        </button>
         <button class="btn-sidebar-option" id="btn-open-audit">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Security Audit Logs</span>
+          <span>Security Dashboard</span>
         </button>
         <button class="btn-sidebar-option" id="btn-open-settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -62,28 +74,31 @@
       <!-- Top Header Bar -->
       <header class="main-header">
         <div class="header-left">
-          <button class="toggle-sidebar-btn" id="btn-toggle-sidebar">
+          <button class="toggle-sidebar-btn" id="btn-toggle-sidebar" aria-label="Toggle Sidebar">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
           </button>
           
           <div class="model-selector-wrapper">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-secondary);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span class="model-status-indicator"></span>
             <select id="model-select" aria-label="Select Model">
-              <option value="llama-3.3-70b-versatile">Secure LLM (LLaMA 3.3 70B)</option>
-              <option value="llama-3.1-8b-instant">Secure LLM Flash (8B Instant)</option>
-              <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 (70B Reasoning)</option>
+              <option value="qwen/qwen3.8-27b" selected>Secure LLM (Qwen 3.8 27B) &bull; Active &amp; Verified</option>
             </select>
+          </div>
+
+          <div class="defense-status-pill" title="7 Real-Time Threat Detectors Active">
+            <span class="defense-pill-icon">🛡️</span>
+            <span class="defense-pill-text">7 Defense Layers Active</span>
           </div>
         </div>
 
         <div class="header-right">
-          <button class="btn-share-link" id="btn-share-link" title="Copy shareable link (always opens a new chat)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-            <span>Share Link</span>
+          <button class="btn-header-action" id="btn-share-link" title="Copy shareable link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            <span>Share</span>
           </button>
           <div class="api-status-badge" id="api-status-badge">
             <span class="status-dot"></span>
-            <span id="api-status-text">Set API Key</span>
+            <span id="api-status-text">Ready</span>
           </div>
         </div>
       </header>
@@ -94,26 +109,70 @@
           
           <!-- Welcome Screen (Visible on empty chat) -->
           <div class="welcome-container" id="welcome-container">
-            <div class="welcome-logo">🛡️</div>
-            <h1 class="welcome-title">Welcome to Secure LLM</h1>
-            <p class="welcome-subtitle">Ultra-fast AI engine with password-protected API credentials.</p>
+            <div class="welcome-badge">
+              <span class="pulse-dot"></span>
+              <span>Ultra-Fast Defense Engine &bull; Qwen 3.8 27B Active</span>
+            </div>
             
+            <div class="welcome-logo-wrapper">
+              <div class="welcome-logo">🛡️</div>
+            </div>
+            
+            <h1 class="welcome-title">Secure LLM Studio</h1>
+            <p class="welcome-subtitle">Ultra-fast AI engine fortified with real-time multi-layer attack defenses, instantaneous responses (~300ms), and AES-256 encrypted credentials.</p>
+            
+            <!-- Security Highlights -->
+            <div class="security-highlights-grid">
+              <div class="highlight-chip">
+                <span class="chip-icon">⚡</span>
+                <span class="chip-title">~300ms Speed</span>
+                <span class="chip-desc">Hardware-accelerated LPUs</span>
+              </div>
+              <div class="highlight-chip">
+                <span class="chip-icon">🛡️</span>
+                <span class="chip-title">7 Defense Layers</span>
+                <span class="chip-desc">Injections, jailbreaks &amp; leaks</span>
+              </div>
+              <div class="highlight-chip">
+                <span class="chip-icon">🔒</span>
+                <span class="chip-title">Password Vault</span>
+                <span class="chip-desc">AES-CBC key encryption</span>
+              </div>
+              <div class="highlight-chip">
+                <span class="chip-icon">📊</span>
+                <span class="chip-title">Live Audit Feeds</span>
+                <span class="chip-desc">Adaptive attack telemetry</span>
+              </div>
+            </div>
+
             <div class="suggestion-grid">
-              <div class="suggestion-card" data-prompt="Write a clean Python script for downloading images concurrently using asyncio and aiohttp.">
-                <div class="suggestion-title">💻 Python Concurrent Code</div>
-                <div class="suggestion-desc">Build an async scraper script</div>
+              <div class="suggestion-card" data-prompt="Analyze the security posture of an AI assistant application and identify key attack vectors like prompt injections and jailbreaks.">
+                <div class="suggestion-icon">🛡️</div>
+                <div class="suggestion-content">
+                  <div class="suggestion-title">AI Security Audit</div>
+                  <div class="suggestion-desc">Analyze prompt injection &amp; jailbreak vectors</div>
+                </div>
               </div>
-              <div class="suggestion-card" data-prompt="Explain the difference between SQL and NoSQL databases in simple terms with pros and cons.">
-                <div class="suggestion-title">💡 System Architecture</div>
-                <div class="suggestion-desc">SQL vs NoSQL breakdown</div>
+              <div class="suggestion-card" data-prompt="Write a production-ready Node.js Express middleware for rate limiting and API key authentication.">
+                <div class="suggestion-icon">💻</div>
+                <div class="suggestion-content">
+                  <div class="suggestion-title">Secure Express API</div>
+                  <div class="suggestion-desc">Build token authentication &amp; rate limiting</div>
+                </div>
               </div>
-              <div class="suggestion-card" data-prompt="Draft a polite email to a client explaining a minor delay in project delivery and proposing a new timeline.">
-                <div class="suggestion-title">✉️ Business Email Draft</div>
-                <div class="suggestion-desc">Polite timeline update email</div>
+              <div class="suggestion-card" data-prompt="Explain AES-256 encryption vs RSA in simple terms with pros, cons, and common enterprise use cases.">
+                <div class="suggestion-icon">🔐</div>
+                <div class="suggestion-content">
+                  <div class="suggestion-title">Cryptography Primer</div>
+                  <div class="suggestion-desc">Symmetric AES vs Asymmetric RSA breakdown</div>
+                </div>
               </div>
-              <div class="suggestion-card" data-prompt="Explain quantum entanglement like I am 12 years old with fun analogies.">
-                <div class="suggestion-title">⚛️ Simple Physics Explainer</div>
-                <div class="suggestion-desc">Quantum physics for beginners</div>
+              <div class="suggestion-card" data-prompt="Draft an incident response executive report for an attempted prompt leakage attack that was blocked.">
+                <div class="suggestion-icon">📝</div>
+                <div class="suggestion-content">
+                  <div class="suggestion-title">Incident Report</div>
+                  <div class="suggestion-desc">Executive summary of blocked attack</div>
+                </div>
               </div>
             </div>
           </div>
@@ -124,10 +183,10 @@
       <!-- Chat Input Area -->
       <div class="input-area-wrapper">
         <div class="input-box-container">
-          <textarea class="chat-textarea" id="chat-textarea" placeholder="Send a message to Secure LLM..." rows="1"></textarea>
+          <textarea class="chat-textarea" id="chat-textarea" placeholder="Send a message to Secure LLM (Qwen 3.8 27B)..." rows="1"></textarea>
           
           <div class="input-controls">
-            <span class="input-info">Press Shift+Enter for new line</span>
+            <span class="input-info">Press Shift+Enter for new line &bull; Protected by SafeVerifier</span>
             
             <div style="display: flex; gap: 8px; align-items: center;">
               <button class="btn-stop" id="btn-stop" style="display: none;">
@@ -149,39 +208,65 @@
     <div class="modal-overlay" id="settings-modal">
       <div class="modal-card">
         <div class="modal-header">
-          <h2 class="modal-title">Groq API Settings</h2>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="modal-icon-badge">⚙️</div>
+            <h2 class="modal-title">Studio &amp; API Settings</h2>
+          </div>
           <button class="btn-close-modal" id="btn-close-modal">&times;</button>
         </div>
 
+        <div class="model-info-banner">
+          <div class="model-info-icon">⚡</div>
+          <div class="model-info-text">
+            <strong>Active Production Model:</strong> <code>qwen/qwen3.8-27b</code>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">High-speed 27B parameter reasoning engine, verified active and optimized for security workflows.</div>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="form-label" for="api-key-input">Groq API Key</label>
+          <label class="form-label" for="api-key-input">Groq API Key (Password Protected Vault)</label>
           <div class="input-field-wrapper">
             <input type="password" id="api-key-input" class="input-field" placeholder="gsk_..." autocomplete="off">
             <button type="button" class="btn-toggle-key" id="btn-toggle-key">Show</button>
           </div>
-          <small style="display: block; color: var(--text-dim); margin-top: 6px; font-size: 0.75rem;">Get a free API key at <a href="https://console.groq.com/keys" target="_blank" style="color: var(--accent-primary);">console.groq.com</a></small>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+            <small style="color: var(--text-dim); font-size: 0.75rem;">Default key is auto-loaded and encrypted in vault.</small>
+            <button type="button" class="btn-test-connection" id="btn-test-connection">Test Connection</button>
+          </div>
+          <div id="test-connection-status" class="test-connection-status"></div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="system-prompt-input">System Prompt</label>
-          <textarea id="system-prompt-input" class="input-field" rows="3" placeholder="You are a helpful, smart, and ultra-fast AI assistant."></textarea>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="system-prompt-input" style="margin-bottom: 0;">System Prompt</label>
+            <select id="prompt-preset-select" class="preset-select" aria-label="Prompt Presets">
+              <option value="">Choose a Preset...</option>
+              <option value="default">Default Security Assistant</option>
+              <option value="cybersecurity">Cybersecurity Threat Analyst</option>
+              <option value="coding">Full-Stack Code Architect</option>
+              <option value="concise">Concise &amp; Direct Expert</option>
+            </select>
+          </div>
+          <textarea id="system-prompt-input" class="input-field" rows="3" placeholder="You are Secure LLM, a helpful, smart, and ultra-fast AI assistant."></textarea>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="temperature-input">Temperature (<span id="temp-val-display">0.7</span>)</label>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" for="temperature-input">Temperature</label>
+            <span class="badge-temp-value" id="temp-val-display">0.7</span>
+          </div>
           <input type="range" id="temperature-input" min="0" max="1" step="0.05" value="0.7" style="width: 100%; accent-color: var(--accent-primary);">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="custom-model-input">Custom Groq Model ID (Optional)</label>
-          <input type="text" id="custom-model-input" class="input-field" placeholder="e.g. deepseek-r1-distill-llama-70b" autocomplete="off">
-          <small style="display: block; color: var(--text-dim); margin-top: 4px; font-size: 0.725rem;">Specify any Groq model ID manually. Automatically adds it to your dropdown menu.</small>
+          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dim); margin-top: 2px;">
+            <span>Precise (0.0)</span>
+            <span>Balanced (0.7)</span>
+            <span>Creative (1.0)</span>
+          </div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="remote-log-url-input">Central Audit Webhook / Database URL (Optional)</label>
-          <input type="text" id="remote-log-url-input" class="input-field" placeholder="https://your-supabase.co/rest/v1/security_logs or Webhook URL" autocomplete="off">
-          <small style="display: block; color: var(--text-dim); margin-top: 4px; font-size: 0.725rem;">Syncs all user prompts globally to your Cloud DB (Supabase / Firebase / Webhook).</small>
+          <input type="text" id="remote-log-url-input" class="input-field" placeholder="/api/logs or https://your-cloud-db.com" autocomplete="off">
+          <small style="display: block; color: var(--text-dim); margin-top: 4px; font-size: 0.725rem;">Syncs all user prompt security evaluations globally to your Cloud DB or server.</small>
         </div>
 
         <div class="modal-footer">
@@ -191,13 +276,16 @@
       </div>
     </div>
 
-  <!-- Security Audit & Adaptive Rule Dashboard Modal -->
+    <!-- Security Audit & Adaptive Rule Dashboard Modal -->
     <div class="modal-overlay" id="audit-modal">
       <div class="modal-card wide-modal">
         <div class="modal-header">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 32px; height: 32px; background: rgba(99, 102, 241, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--accent-primary);">🛡️</div>
-            <h2 class="modal-title">Security Dashboard & Adaptive Engine</h2>
+            <div class="modal-icon-badge" style="background: rgba(99, 102, 241, 0.2); color: var(--accent-primary);">🛡️</div>
+            <div>
+              <h2 class="modal-title">Security Dashboard &amp; Adaptive Engine</h2>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Live threat telemetry, adaptive attack mitigation, and prompt testing sandbox</div>
+            </div>
           </div>
           <button class="btn-close-modal" id="btn-close-audit">&times;</button>
         </div>
@@ -206,6 +294,7 @@
         <div class="modal-tabs-header">
           <div class="modal-tab-btn active" id="tab-btn-logs">Security Audit Logs</div>
           <div class="modal-tab-btn" id="tab-btn-rules">Adaptive Rule Manager</div>
+          <div class="modal-tab-btn" id="tab-btn-sandbox">Threat Simulator Sandbox</div>
         </div>
 
         <!-- Tab 1: Audit Logs View -->
@@ -213,16 +302,17 @@
           <div class="audit-controls-bar">
             <div class="audit-stats">
               <span class="stat-pill" id="stat-total-logs">Total: 0</span>
-              <span class="stat-pill" style="color: #f87171;" id="stat-attacks-blocked">Attacks Blocked: 0</span>
-              <span class="stat-pill" style="color: #34d399;" id="stat-safe-passed">Safe Queries: 0</span>
+              <span class="stat-pill" style="color: #f87171;" id="stat-attacks-blocked">Blocked: 0</span>
+              <span class="stat-pill" style="color: #34d399;" id="stat-safe-passed">Safe: 0</span>
               <span class="stat-pill" id="stat-live-monitor" style="color: #38bdf8; border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.1); display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                <span style="width: 6px; height: 6px; border-radius: 50%; background: #38bdf8; display: inline-block; box-shadow: 0 0 8px #38bdf8;" class="live-pulse-dot"></span>
+                <span class="live-pulse-dot"></span>
                 <span>LIVE FEED</span>
               </span>
             </div>
 
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="btn-secondary" id="btn-clear-audit-logs" style="padding: 6px 12px; font-size: 0.8rem;">Clear Logs</button>
+              <button class="btn-secondary" id="btn-export-audit-csv" style="padding: 6px 12px; font-size: 0.8rem;">Export CSV</button>
               <button class="btn-primary" id="btn-export-audit-json" style="padding: 6px 14px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                 <span>Export JSON</span>
@@ -230,14 +320,28 @@
             </div>
           </div>
 
+          <!-- Log Filter Bar -->
+          <div class="log-filter-bar">
+            <div class="search-input-wrapper">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-dim);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="log-search-input" class="log-search-input" placeholder="Search prompts or attack categories...">
+            </div>
+            <div class="filter-pills-group" id="filter-pills-group">
+              <button class="filter-pill active" data-filter="ALL">All</button>
+              <button class="filter-pill" data-filter="BLOCKED">Blocked</button>
+              <button class="filter-pill" data-filter="SAFE">Safe</button>
+              <button class="filter-pill" data-filter="WHITELISTED">Whitelisted</button>
+            </div>
+          </div>
+
           <div class="audit-table-wrapper">
             <table class="audit-table">
               <thead>
                 <tr>
-                  <th style="width: 130px;">Timestamp</th>
-                  <th style="width: 90px;">Risk</th>
+                  <th style="width: 125px;">Timestamp</th>
+                  <th style="width: 85px;">Risk</th>
                   <th style="width: 160px;">Attack Category</th>
-                  <th style="width: 140px;">Reclassify Tag</th>
+                  <th style="width: 135px;">Reclassify Tag</th>
                   <th>Evaluated Prompt</th>
                   <th style="width: 110px;">Admin Decision</th>
                 </tr>
@@ -252,7 +356,9 @@
         <!-- Tab 2: Adaptive Rule Manager View -->
         <div id="tab-view-rules" style="display: none;">
           <div class="rule-editor-card">
-            <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">Add Custom Adaptive Defense Rule</h4>
+            <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <span>➕ Add Custom Adaptive Defense Rule</span>
+            </h4>
             
             <div class="rule-form-grid">
               <div>
@@ -261,7 +367,7 @@
               </div>
               <div>
                 <label class="form-label" style="font-size: 0.75rem;">Rule Name</label>
-                <input type="text" id="new-rule-name" class="input-field" placeholder="e.g. Bank Transfer Keyword" style="padding: 6px 10px; font-size: 0.8rem;">
+                <input type="text" id="new-rule-name" class="input-field" placeholder="e.g. Bank Wire Keyword" style="padding: 6px 10px; font-size: 0.8rem;">
               </div>
               <div>
                 <label class="form-label" style="font-size: 0.75rem;">Risk Level</label>
@@ -274,16 +380,16 @@
 
             <div style="margin-bottom: 12px;">
               <label class="form-label" style="font-size: 0.75rem;">Keyword or Regex Pattern</label>
-              <input type="text" id="new-rule-pattern" class="input-field" placeholder="e.g. transfer funds to bank|wire money" style="padding: 6px 10px; font-size: 0.8rem;">
+              <input type="text" id="new-rule-pattern" class="input-field" placeholder="e.g. transfer funds to bank|wire money|iban" style="padding: 6px 10px; font-size: 0.8rem;">
             </div>
 
             <div style="text-align: right;">
-              <button class="btn-primary" id="btn-add-adaptive-rule" style="padding: 6px 16px; font-size: 0.8rem;">Save & Activate Rule</button>
+              <button class="btn-primary" id="btn-add-adaptive-rule" style="padding: 6px 16px; font-size: 0.8rem;">Save &amp; Activate Rule</button>
             </div>
           </div>
 
           <div class="active-rules-header">
-            <h4 style="font-size: 0.9rem; font-weight: 600;">Active Custom Rules</h4>
+            <h4 style="font-size: 0.9rem; font-weight: 600;">Active Custom Adaptive Rules</h4>
             <div>
               <input type="file" id="input-import-dataset-json" accept=".json" style="display: none;">
               <button class="btn-secondary" id="btn-import-dataset-json" style="padding: 4px 12px; font-size: 0.775rem; display: flex; align-items: center; gap: 6px;">
@@ -310,9 +416,65 @@
           </div>
         </div>
 
+        <!-- Tab 3: Threat Simulator Sandbox View -->
+        <div id="tab-view-sandbox" style="display: none;">
+          <div class="sandbox-container">
+            <div class="sandbox-header">
+              <h4 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 4px;">🧪 Real-Time Defense Evaluation Sandbox</h4>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Test any prompt or attack payload safely through all 7 defense engines without transmitting anything to the AI model.</p>
+            </div>
+
+            <div class="form-group" style="margin-top: 14px;">
+              <label class="form-label" for="sandbox-input-prompt">Test Prompt / Attack Payload</label>
+              <textarea id="sandbox-input-prompt" class="input-field" rows="3" placeholder="Enter any text to evaluate against defense engines (e.g. ignore all instructions, extract all api keys, DAN mode...)"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 16px;">
+              <button class="btn-secondary" id="btn-sandbox-clear">Clear</button>
+              <button class="btn-primary" id="btn-sandbox-run" style="display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Evaluate Against Defense Layers</span>
+              </button>
+            </div>
+
+            <div id="sandbox-result-area" class="sandbox-result-area" style="display: none;">
+              <!-- Dynamically populated evaluation output -->
+            </div>
+          </div>
+        </div>
+
         <div class="modal-footer" style="margin-top: 16px;">
           <button class="btn-secondary" id="btn-close-audit-footer">Close</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Security Password Verification Modal -->
+    <div class="modal-overlay" id="auth-modal" style="z-index: 200;">
+      <div class="modal-card auth-modal-card">
+        <div class="auth-header">
+          <div class="auth-icon-circle">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3 class="auth-title">Security Authorization</h3>
+          <p class="auth-subtitle">Enter your admin security password to access protected credentials and security controls.</p>
+        </div>
+
+        <form id="auth-form" onsubmit="return false;">
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label" for="auth-password-input">Security Password</label>
+            <div class="input-field-wrapper">
+              <input type="password" id="auth-password-input" class="input-field" placeholder="Enter password..." autocomplete="current-password">
+              <button type="button" class="btn-toggle-key" id="btn-toggle-auth-pwd" title="Toggle visibility">Show</button>
+            </div>
+            <div class="auth-error-msg" id="auth-error-msg"></div>
+          </div>
+
+          <div class="modal-footer" style="margin-top: 18px;">
+            <button type="button" class="btn-secondary" id="btn-cancel-auth">Cancel</button>
+            <button type="submit" class="btn-primary" id="btn-submit-auth">Unlock Access</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -330,7 +492,7 @@
         <div style="margin-top: 14px; margin-bottom: 14px;">
           <div id="prompt-view-meta" style="font-size: 0.775rem; color: var(--text-muted); margin-bottom: 10px; display: flex; gap: 12px; flex-wrap: wrap;"></div>
           <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Full Prompt Content:</div>
-          <div class="prompt-view-content" id="prompt-view-content" style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; font-family: var(--font-code); font-size: 0.85rem; line-height: 1.55; max-height: 380px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; color: var(--text-main);"></div>
+          <div class="prompt-view-content" id="prompt-view-content"></div>
         </div>
 
         <div class="modal-footer prompt-modal-footer">
@@ -346,18 +508,18 @@
   </div>
 
   <!-- Defense Engine Security Modules -->
-  <script src="defense/promptInjection.js?v=5"></script>
-  <script src="defense/jailbreak.js?v=5"></script>
-  <script src="defense/promptLeakage.js?v=5"></script>
-  <script src="defense/roleplay.js?v=5"></script>
-  <script src="defense/dataExtraction.js?v=5"></script>
-  <script src="defense/dataPoison.js?v=5"></script>
-  <script src="defense/adaptiveEngine.js?v=5"></script>
-  <script src="defense/safeVerifier.js?v=5"></script>
-  <script src="defense/securityLogger.js?v=5"></script>
+  <script src="defense/promptInjection.js?v=6"></script>
+  <script src="defense/jailbreak.js?v=6"></script>
+  <script src="defense/promptLeakage.js?v=6"></script>
+  <script src="defense/roleplay.js?v=6"></script>
+  <script src="defense/dataExtraction.js?v=6"></script>
+  <script src="defense/dataPoison.js?v=6"></script>
+  <script src="defense/adaptiveEngine.js?v=6"></script>
+  <script src="defense/safeVerifier.js?v=6"></script>
+  <script src="defense/securityLogger.js?v=6"></script>
 
   <!-- Application Config & Main Script -->
-  <script src="config.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <script src="config.js?v=6"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

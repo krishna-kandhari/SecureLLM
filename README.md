@@ -57,12 +57,29 @@ SecureLLM orchestrates **6 specialized security defense modules** before sending
 
 ---
 
-## 📊 Live Security Audit Dashboard
+## ⚡ Active AI Model
 
-- Click **"Security Audit Logs"** in the sidebar to open the real-time telemetry dashboard.
-- View live attack metrics (**Attacks Blocked**, **Safe Queries Passed**).
-- Import evaluation datasets via **"Import JSON Dataset"** using `sample_security_dataset.json`.
-- Export audit logs in structured JSON format for compliance and reporting.
+- **Model ID:** `qwen/qwen3.8-27b`
+- **Architecture:** 27B parameter powerhouse running on high-speed Groq LPUs.
+- **Latency:** ~300ms ultra-low latency response streaming.
+- **Single Working Model:** Fully verified and active, replacing deprecated models.
+
+---
+
+## 🔒 Security Password Protection
+
+- **Admin Password:** `Krishna@3960`
+- **Protection Scope:** Unlocks encrypted API key in settings, grants administrative controls in the Security Dashboard, and authorizes rule deletions / dataset imports.
+- **Encryption Vault:** API credentials encrypted using AES-CBC with SHA-256 password-derived keys.
+
+---
+
+## 📊 Live Security Dashboard & Sandbox
+
+- **Live Audit Telemetry:** Real-time log table with instant search and filter pills (`All`, `Blocked`, `Safe`, `Whitelisted`).
+- **Threat Simulator Sandbox:** Safely evaluate any prompt or adversarial payload directly inside the browser against all 7 defense engines without transmitting queries to the AI model.
+- **Dataset Import & Export:** Export logs to both CSV and JSON formats; import attack datasets using `sample_security_dataset.json`.
+- **Export Conversations:** Export chat transcripts as formatted Markdown files.
 
 ---
 

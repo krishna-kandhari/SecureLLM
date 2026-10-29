@@ -31,7 +31,10 @@ window.AdaptiveEngine = {
   // Push full rules and whitelist state to remote server
   async syncStateToServer() {
     try {
-      await fetch('/api/rules', {
+      const url = (typeof window !== 'undefined' && window.location && window.location.origin) 
+        ? `${window.location.origin}/api/rules` 
+        : 'http://localhost:3000/api/rules';
+      await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -70,7 +73,10 @@ window.AdaptiveEngine = {
 
     // STEP 2: Fetch from server API (catches cross-device/cross-browser updates)
     try {
-      const res = await fetch('/api/rules', { method: 'GET' });
+      const url = (typeof window !== 'undefined' && window.location && window.location.origin) 
+        ? `${window.location.origin}/api/rules` 
+        : 'http://localhost:3000/api/rules';
+      const res = await fetch(url, { method: 'GET' });
       if (!res.ok) return;
       const data = await res.json();
       
