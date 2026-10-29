@@ -2,7 +2,7 @@
  * Groq AI Minimal Studio - Application Logic
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initializeApp() {
   // --- DOM Elements ---
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -34,12 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const systemPromptInput = document.getElementById('system-prompt-input');
   const temperatureInput = document.getElementById('temperature-input');
   const tempValDisplay = document.getElementById('temp-val-display');
-
-  // Lock Screen Overlay Elements
-  const lockOverlay = document.getElementById('lock-overlay');
-  const authPasswordInput = document.getElementById('auth-password-input');
-  const btnUnlockApp = document.getElementById('btn-unlock-app');
-  const lockErrorMsg = document.getElementById('lock-error-msg');
 
   // --- State Variables ---
   const SINGLE_WORKING_MODEL = "qwen/qwen3.8-27b";
@@ -1564,4 +1558,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Launch app
   init();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
