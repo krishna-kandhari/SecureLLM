@@ -134,6 +134,119 @@ app.delete('/api/rules', (req, res) => {
   res.json({ status: 'cleared' });
 });
 
+const crypto = require('crypto');
+
+// Verified Groq Credentials & Single Working Model
+function getVerifiedGroqKey() {
+  if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim().length > 10) {
+    return process.env.GROQ_API_KEY.trim();
+  }
+  try {
+    const pass = "Krishna@3960";
+    const ivHex = "9938953fabed86cb29d83637841173ba";
+    const encHex = "57797a601a6df6aa9706f8f5091e0a8ae1db6f6ca4a396c78522845143bf9d424f79c8d661bbf01daff3474f216335d162bb5707937a6b472766348873e84d03";
+    const key = crypto.createHash("sha256").update(pass).digest();
+    const iv = Buffer.from(ivHex, "hex");
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+    let dec = decipher.update(Buffer.from(encHex, "hex"), null, "utf8");
+    dec += decipher.final("utf8");
+    return dec.trim();
+  } catch (err) {
+    console.error("Failed to decrypt server-side Groq key:", err.message);
+    return "";
+  }
+}
+
+const VERIFIED_GROQ_KEY = getVerifiedGroqKey();
+const VERIFIED_MODEL = 'qwen/qwen3.8-27b';
+
+// API Route: Live Model Status & Connectivity Check
+app.get('/api/model-status', async (req, res) => {
+  try {
+    const upstream = await fetch('https://api.groq.com/openai/v1/models/' + VERIFIED_MODEL, {
+      headers: { 'Authorization': `Bearer ${VERIFIED_GROQ_KEY}` }
+    });
+    if (upstream.ok) {
+      const data = await upstream.json();
+      return res.json({ status: 'connected', model: VERIFIED_MODEL, active: true, info: data });
+    } else {
+      return res.status(upstream.status).json({ status: 'error', code: upstream.status });
+    }
+  } catch (err) {
+    return res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// API Route: Streaming Chat Proxy (Pipes SSE stream directly to browser)
+app.post('/api/chat', async (req, res) => {
+  const { messages, temperature, stream } = req.body || {};
+  
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: { message: 'Missing or invalid messages array' } });
+  }
+
+  // Allow custom client key if provided in Authorization header, else use verified key
+  const authHeader = req.headers['authorization'] || '';
+  const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+  const activeKey = (tokenMatch && tokenMatch[1] && tokenMatch[1].trim().length > 10) 
+    ? tokenMatch[1].trim() 
+    : VERIFIED_GROQ_KEY;
+
+  try {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${activeKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: VERIFIED_MODEL,
+        messages: messages,
+        temperature: typeof temperature === 'number' ? temperature : 0.7,
+        stream: stream !== false
+      })
+    });
+
+    if (!groqRes.ok) {
+      const errJson = await groqRes.json().catch(() => ({}));
+      return res.status(groqRes.status).json(errJson);
+    }
+
+    if (stream === false) {
+      const data = await groqRes.json();
+      return res.json(data);
+    }
+
+    // Set streaming SSE headers
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof res.flushHeaders === 'function') res.flushHeaders();
+
+    const reader = groqRes.body.getReader();
+
+    req.on('close', () => {
+      reader.cancel().catch(() => {});
+    });
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(value);
+    }
+    res.end();
+
+  } catch (err) {
+    console.error('Groq proxy error:', err);
+    if (!res.headersSent) {
+      res.status(502).json({ error: { message: `Backend Groq Gateway Error: ${err.message}` } });
+    } else {
+      res.end();
+    }
+  }
+});
+
 // Serve frontend for all unmatched routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

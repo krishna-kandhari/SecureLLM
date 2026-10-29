@@ -42,13 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const lockErrorMsg = document.getElementById('lock-error-msg');
 
   // --- State Variables ---
+  const SINGLE_WORKING_MODEL = "qwen/qwen3.8-27b";
+
   const defaultConfig = (typeof CONFIG !== 'undefined' ? CONFIG : (window.CONFIG || {}));
   let sessionKey = sessionStorage.getItem('groq_unlocked_key');
   let storedKey = localStorage.getItem('groq_api_key');
-  let apiKey = sessionKey || ((storedKey && storedKey.trim().length > 0) ? storedKey.trim() : (defaultConfig.DEFAULT_GROQ_API_KEY || ''));
-  let systemPrompt = localStorage.getItem('groq_system_prompt') || defaultConfig.DEFAULT_SYSTEM_PROMPT || 'You are a helpful, smart, and ultra-fast AI assistant.';
+  let apiKey = sessionKey || ((storedKey && storedKey.trim().length > 15) ? storedKey.trim() : (defaultConfig.DEFAULT_GROQ_API_KEY || ''));
+  let systemPrompt = localStorage.getItem('groq_system_prompt') || defaultConfig.DEFAULT_SYSTEM_PROMPT || 'You are Secure LLM, a helpful, smart, and ultra-fast AI assistant protected by real-time defense layers.';
   let temperature = parseFloat(localStorage.getItem('groq_temperature') || defaultConfig.DEFAULT_TEMPERATURE || '0.7');
-  let selectedModel = localStorage.getItem('groq_selected_model') || defaultConfig.DEFAULT_MODEL || 'llama-3.3-70b-versatile';
+  let selectedModel = SINGLE_WORKING_MODEL;
   
   let chats = JSON.parse(localStorage.getItem('groq_chats_history') || '[]');
   let currentChatId = null;
@@ -177,20 +179,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return new TextDecoder().decode(decryptedBuf);
   }
 
-  // Auto-decrypt key in background with Krishna@3960 so everyone can use the chatbot
+  // Auto-decrypt key in background with Krishna@3960 and ensure working key is active
   async function ensureApiKeyLoaded() {
-    if (apiKey && apiKey.length > 10) return;
+    if (apiKey && apiKey.length > 20) {
+      localStorage.setItem('groq_api_key', apiKey);
+      return apiKey;
+    }
     try {
-      if (defaultConfig.ENCRYPTED_KEY_PAYLOAD && defaultConfig.ENCRYPTED_KEY_IV) {
+      if (defaultConfig.DEFAULT_GROQ_API_KEY) {
+        apiKey = defaultConfig.DEFAULT_GROQ_API_KEY;
+      } else if (defaultConfig.ENCRYPTED_KEY_PAYLOAD && defaultConfig.ENCRYPTED_KEY_IV) {
         apiKey = await decryptApiKey("Krishna@3960", defaultConfig.ENCRYPTED_KEY_IV, defaultConfig.ENCRYPTED_KEY_PAYLOAD);
       }
     } catch (err) {
       console.warn("Auto-decryption of default key failed:", err);
     }
+    if (apiKey && apiKey.length > 20) {
+      localStorage.setItem('groq_api_key', apiKey);
+      if (apiKeyInput) apiKeyInput.value = apiKey;
+      updateApiStatus();
+    }
+    return apiKey;
   }
-
-  // Single verified working model on Groq
-  const SINGLE_WORKING_MODEL = "qwen/qwen3.8-27b";
 
   // --- Dynamic Model Fetcher (Locked to verified model) ---
   async function fetchGroqModels() {
@@ -205,9 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function init() {
     await ensureApiKeyLoaded();
 
-    // Lock selectedModel to the single verified working model
+    // Lock selectedModel strictly to the single verified working model
     selectedModel = SINGLE_WORKING_MODEL;
     localStorage.setItem('groq_selected_model', SINGLE_WORKING_MODEL);
+    if (!localStorage.getItem('groq_api_key') || localStorage.getItem('groq_api_key').length < 15) {
+      localStorage.setItem('groq_api_key', apiKey);
+    }
 
     // Set UI values from state
     apiKeyInput.value = apiKey;
@@ -312,28 +325,45 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnTestConnection && testConnectionStatus) {
     btnTestConnection.addEventListener('click', async () => {
       const keyToTest = apiKeyInput.value.trim() || apiKey;
-      if (!keyToTest) {
-        testConnectionStatus.className = 'test-connection-status error';
-        testConnectionStatus.textContent = '❌ No API key available to test.';
-        return;
-      }
 
       testConnectionStatus.className = 'test-connection-status testing';
       testConnectionStatus.textContent = '⏳ Testing connection to Qwen 3.8 27B...';
 
       try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${keyToTest}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: SINGLE_WORKING_MODEL,
-            messages: [{ role: 'user', content: 'Say OK' }],
-            max_tokens: 5
-          })
-        });
+        let res = null;
+        if (window.location.protocol.startsWith('http')) {
+          try {
+            res = await fetch('/api/chat', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${keyToTest}`
+              },
+              body: JSON.stringify({
+                model: SINGLE_WORKING_MODEL,
+                messages: [{ role: 'user', content: 'Say OK' }],
+                stream: false
+              })
+            });
+          } catch (e) {
+            res = null;
+          }
+        }
+
+        if (!res || !res.ok) {
+          res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${keyToTest}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: SINGLE_WORKING_MODEL,
+              messages: [{ role: 'user', content: 'Say OK' }],
+              max_tokens: 5
+            })
+          });
+        }
 
         if (res.ok) {
           testConnectionStatus.className = 'test-connection-status success';
@@ -720,16 +750,8 @@ document.addEventListener('DOMContentLoaded', () => {
       window.SecurityLogger.logEntry(userText, securityCheck);
     }
 
-    if (!apiKey) {
-      const cfg = (typeof CONFIG !== 'undefined' ? CONFIG : (window.CONFIG || {}));
-      apiKey = cfg.DEFAULT_GROQ_API_KEY || '';
-    }
-
-    if (!apiKey) {
-      appendMessageToDom('user', userText);
-      const { bubble } = appendMessageToDom('assistant', '', false);
-      bubble.innerHTML = `<div style="color: #f87171; font-weight: 500; display: flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ef4444; flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg><span>Groq API key is missing. Please click <strong>Settings</strong> at the bottom left to configure your API key.</span></div>`;
-      return;
+    if (!apiKey || apiKey.length < 20) {
+      await ensureApiKeyLoaded();
     }
 
     if (!securityCheck.isSafe) {
@@ -793,20 +815,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const requestStartTime = Date.now();
 
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: SINGLE_WORKING_MODEL,
-          messages: apiMessages,
-          temperature: temperature,
-          stream: true
-        }),
-        signal: activeAbortController.signal
-      });
+      // Dual-channel streaming: Try /api/chat server proxy first (avoids CORS/adblock), fallback to direct Groq API
+      let response = null;
+      const isHttp = window.location.protocol.startsWith('http');
+
+      if (isHttp) {
+        try {
+          response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: SINGLE_WORKING_MODEL,
+              messages: apiMessages,
+              temperature: temperature,
+              stream: true
+            }),
+            signal: activeAbortController.signal
+          });
+        } catch (proxyErr) {
+          console.warn('Proxy /api/chat unreachable, falling back to direct Groq API:', proxyErr.message);
+          response = null;
+        }
+      }
+
+      if (!response || !response.ok) {
+        response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: SINGLE_WORKING_MODEL,
+            messages: apiMessages,
+            temperature: temperature,
+            stream: true
+          }),
+          signal: activeAbortController.signal
+        });
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
