@@ -42,7 +42,11 @@ function initializeApp() {
   let sessionKey = sessionStorage.getItem('groq_unlocked_key');
   let storedKey = localStorage.getItem('groq_api_key');
   let apiKey = sessionKey || ((storedKey && storedKey.trim().length > 15) ? storedKey.trim() : (defaultConfig.DEFAULT_GROQ_API_KEY || ''));
-  let systemPrompt = localStorage.getItem('groq_system_prompt') || defaultConfig.DEFAULT_SYSTEM_PROMPT || 'You are Secure LLM, a helpful, smart, and ultra-fast AI assistant protected by real-time defense layers.';
+  let systemPrompt = localStorage.getItem('groq_system_prompt');
+  if (!systemPrompt || !systemPrompt.includes('Krishna Kandhari')) {
+    systemPrompt = defaultConfig.DEFAULT_SYSTEM_PROMPT || 'You are Secure LLM, an enterprise-grade AI assistant protected by a real-time 7-layer defense firewall, architected by Krishna Kandhari.';
+    localStorage.setItem('groq_system_prompt', systemPrompt);
+  }
   let temperature = parseFloat(localStorage.getItem('groq_temperature') || defaultConfig.DEFAULT_TEMPERATURE || '0.7');
   let selectedModel = SINGLE_WORKING_MODEL;
   
@@ -380,9 +384,9 @@ function initializeApp() {
     promptPresetSelect.addEventListener('change', (e) => {
       const val = e.target.value;
       if (val === 'default') {
-        systemPromptInput.value = 'You are Secure LLM, a helpful, smart, and ultra-fast AI assistant protected by real-time defense layers.';
+        systemPromptInput.value = defaultConfig.DEFAULT_SYSTEM_PROMPT || 'You are Secure LLM, an enterprise-grade AI assistant protected by a real-time 7-layer defense firewall, architected by Krishna Kandhari.';
       } else if (val === 'cybersecurity') {
-        systemPromptInput.value = 'You are Secure LLM Security Analyst, an expert cybersecurity engineer. You specialize in analyzing threat vectors, prompt injections, vulnerability assessments, defense hardening, and incident response with deep technical clarity.';
+        systemPromptInput.value = 'You are Secure LLM Security Analyst, an expert cybersecurity engineer architected by Krishna Kandhari. You specialize in analyzing threat vectors, prompt injections, vulnerability assessments, defense hardening, and incident response with deep technical clarity.';
       } else if (val === 'coding') {
         systemPromptInput.value = 'You are Secure LLM Code Architect, a world-class senior software engineer. Provide elegant, clean, well-architected code solutions with syntax highlighting, unit tests, and performance considerations.';
       } else if (val === 'concise') {
@@ -397,7 +401,7 @@ function initializeApp() {
 
   btnSaveSettings.addEventListener('click', () => {
     apiKey = apiKeyInput.value.trim();
-    systemPrompt = systemPromptInput.value.trim() || 'You are Secure LLM, a helpful, smart, and ultra-fast AI assistant protected by real-time defense layers.';
+    systemPrompt = systemPromptInput.value.trim() || defaultConfig.DEFAULT_SYSTEM_PROMPT || 'You are Secure LLM, an enterprise-grade AI assistant protected by a real-time 7-layer defense firewall, architected by Krishna Kandhari.';
     temperature = parseFloat(temperatureInput.value);
 
     localStorage.setItem('groq_api_key', apiKey);

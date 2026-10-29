@@ -1,6 +1,13 @@
-# 🛡️ SecureLLM - Real-Time AI Defense Engine & Security Dashboard
+# 🛡️ SecureLLM - Enterprise AI Defense Firewall & Studio
 
-**SecureLLM** is an ultra-fast, security-hardened AI Studio and real-time defense framework designed to detect, filter, and audit adversarial attacks targeting Large Language Models (LLMs).
+> **Architected & Developed by:** **Krishna Kandhari**  
+> **Production Capstone Project Submission**  
+> **Core Model:** Qwen 3.8 27B (`qwen/qwen3.8-27b`) via Ultra-Low Latency Groq LPU  
+> **Security Protocol:** 7 Real-Time Defense Layers & AES-256-CBC Encrypted Vault (Password: `Krishna@3960`)
+
+---
+
+**SecureLLM** is an enterprise-grade AI security studio and real-time defense framework designed to detect, filter, and audit adversarial attacks targeting Large Language Models in production. Built to address the **OWASP Top 10 for LLMs**, SecureLLM provides multi-layered heuristic filtering, dynamic adaptive pattern learning, encrypted credential vaults, and full-spectrum audit telemetry.
 
 ---
 
